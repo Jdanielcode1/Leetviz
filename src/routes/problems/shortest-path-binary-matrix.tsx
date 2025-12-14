@@ -459,7 +459,7 @@ function ShortestPathBinaryMatrixVisualization() {
 
   const n = selectedTestCase.grid.length
 
-  const getCellStyle = (row: number, col: number, value: number) => {
+  const getCellStyle = (row: number, col: number, _value: number) => {
     const isStart = row === 0 && col === 0
     const isGoal = row === n - 1 && col === n - 1
     const isCurrentCell = step.currentCell && step.currentCell[0] === row && step.currentCell[1] === col

@@ -265,7 +265,6 @@ function generateSteps(testCase: TestCase): Step[] {
       }
 
       // Redirect next to child
-      const oldNext = curr.next
       nodes[currId].next = childId
 
       steps.push({
@@ -376,7 +375,7 @@ function generateSteps(testCase: TestCase): Step[] {
     }
 
     // Advance
-    const nextCurrId = nodes[currId].next
+    const nextCurrId: number | null = nodes[currId].next
 
     steps.push({
       lineNumber: 27,

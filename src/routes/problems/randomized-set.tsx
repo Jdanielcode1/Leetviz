@@ -290,7 +290,7 @@ function generateSteps(operations: Operation[]): Step[] {
         operationVal: val,
         result: null,
         phase: 'remove-check',
-        highlightArrayIndex: exists ? valuesIdx.get(val) : null,
+        highlightArrayIndex: exists ? valuesIdx.get(val) ?? null : null,
         highlightMapKey: exists ? val : null,
         swapFrom: null,
         swapTo: null,

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type ReactNode } from 'react'
 
 export const Route = createFileRoute('/problems/magic-dictionary')({
   component: MagicDictionaryVisualization,
@@ -465,8 +465,8 @@ function TrieVisualization({
   const highlightSet = new Set(highlightPath)
 
   // Render edges first, then nodes
-  const edges: JSX.Element[] = []
-  const nodes: JSX.Element[] = []
+  const edges: ReactNode[] = []
+  const nodes: ReactNode[] = []
 
   positions.forEach((pos, id) => {
     const isHighlighted = highlightSet.has(id)

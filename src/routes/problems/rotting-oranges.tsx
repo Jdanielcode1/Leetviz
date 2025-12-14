@@ -454,7 +454,6 @@ function generateSteps(initialGrid: number[][]): Step[] {
   }
 
   // Final return
-  const result = fresh === 0 ? time : -1
   steps.push({
     lineNumber: 30,
     description: fresh === 0

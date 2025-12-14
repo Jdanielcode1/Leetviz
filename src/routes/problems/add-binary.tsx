@@ -183,8 +183,6 @@ function generateSteps(a: string, b: string): Step[] {
       highlightIdxB: idxB >= 0,
     })
 
-    let sumBefore = carry
-
     // Process a[idxA]
     if (idxA >= 0) {
       const digitA = parseInt(a[idxA])
@@ -206,7 +204,6 @@ function generateSteps(a: string, b: string): Step[] {
       })
 
       carry += digitA
-      sumBefore = carry
       steps.push({
         lineNumber: 10,
         description: `carry += a[${idxA}] = carry += ${digitA} → carry = ${carry}`,
@@ -281,7 +278,6 @@ function generateSteps(a: string, b: string): Step[] {
       })
 
       carry += digitB
-      sumBefore = carry
       steps.push({
         lineNumber: 13,
         description: `carry += b[${idxB}] = carry += ${digitB} → carry = ${carry}`,

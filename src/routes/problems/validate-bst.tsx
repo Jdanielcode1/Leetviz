@@ -111,7 +111,6 @@ function calculateTreeLayout(nodes: TreeNode[]): NodePosition[] {
 
   const positions: NodePosition[] = new Array(nodes.length)
   const width = 400
-  const height = 300
   const levelHeight = 70
 
   function getDepth(index: number): number {

@@ -140,7 +140,6 @@ function generateSteps(words: string[], k: number): Step[] {
   })
 
   // Count phase - show a few iterations
-  const uniqueWords = [...new Set(words)]
   for (let i = 0; i < words.length; i++) {
     const word = words[i]
     const prevCount = freq.get(word) || 0

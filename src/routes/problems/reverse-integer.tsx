@@ -28,7 +28,7 @@ const PROBLEM_DESCRIPTION = `Given a signed 32-bit integer x, return x with its 
 Assume the environment does not allow you to store 64-bit integers (signed or unsigned).`
 
 const INT_MAX = 2147483647
-const INT_MIN = -2147483648
+// INT_MIN = -2147483648 (for reference, overflow check uses INT_MAX)
 
 interface Step {
   lineNumber: number

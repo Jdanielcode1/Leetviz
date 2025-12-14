@@ -243,7 +243,7 @@ function generateSteps(testCase: TestCase): Step[] {
       insight: `Result so far: "${result}"`,
       inputString: input,
       currentIndex: -1,
-      stack: stack.map((s, idx) => ({ ...s })),
+      stack: stack.map((s) => ({ ...s })),
       phase: 'build-result',
       highlightStackTop: false,
       resultSoFar: result,
