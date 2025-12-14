@@ -11,14 +11,30 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProblemsValidateBstRouteImport } from './routes/problems/validate-bst'
+import { Route as ProblemsUndergroundSystemRouteImport } from './routes/problems/underground-system'
+import { Route as ProblemsTopKFrequentWordsRouteImport } from './routes/problems/top-k-frequent-words'
 import { Route as ProblemsThreeSumRouteImport } from './routes/problems/three-sum'
 import { Route as ProblemsSubarraySumKRouteImport } from './routes/problems/subarray-sum-k'
+import { Route as ProblemsSingleElementSortedRouteImport } from './routes/problems/single-element-sorted'
+import { Route as ProblemsShortestPathBinaryMatrixRouteImport } from './routes/problems/shortest-path-binary-matrix'
+import { Route as ProblemsRottingOrangesRouteImport } from './routes/problems/rotting-oranges'
 import { Route as ProblemsRotateImageRouteImport } from './routes/problems/rotate-image'
 import { Route as ProblemsReverseIntegerRouteImport } from './routes/problems/reverse-integer'
 import { Route as ProblemsRemoveDuplicatesIiRouteImport } from './routes/problems/remove-duplicates-ii'
+import { Route as ProblemsRandomizedSetRouteImport } from './routes/problems/randomized-set'
+import { Route as ProblemsOrderedStreamRouteImport } from './routes/problems/ordered-stream'
+import { Route as ProblemsMergeSortedArrayRouteImport } from './routes/problems/merge-sorted-array'
+import { Route as ProblemsMagicDictionaryRouteImport } from './routes/problems/magic-dictionary'
+import { Route as ProblemsLruCacheRouteImport } from './routes/problems/lru-cache'
+import { Route as ProblemsLongestCommonPrefixRouteImport } from './routes/problems/longest-common-prefix'
+import { Route as ProblemsFruitIntoBasketsRouteImport } from './routes/problems/fruit-into-baskets'
 import { Route as ProblemsFlattenMultilevelListRouteImport } from './routes/problems/flatten-multilevel-list'
 import { Route as ProblemsDecodeStringRouteImport } from './routes/problems/decode-string'
+import { Route as ProblemsContainerWaterRouteImport } from './routes/problems/container-water'
+import { Route as ProblemsBrowserHistoryRouteImport } from './routes/problems/browser-history'
 import { Route as ProblemsBasicCalculatorIiRouteImport } from './routes/problems/basic-calculator-ii'
+import { Route as ProblemsAddTwoNumbersRouteImport } from './routes/problems/add-two-numbers'
+import { Route as ProblemsAddBinaryRouteImport } from './routes/problems/add-binary'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,6 +46,18 @@ const ProblemsValidateBstRoute = ProblemsValidateBstRouteImport.update({
   path: '/problems/validate-bst',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProblemsUndergroundSystemRoute =
+  ProblemsUndergroundSystemRouteImport.update({
+    id: '/problems/underground-system',
+    path: '/problems/underground-system',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsTopKFrequentWordsRoute =
+  ProblemsTopKFrequentWordsRouteImport.update({
+    id: '/problems/top-k-frequent-words',
+    path: '/problems/top-k-frequent-words',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProblemsThreeSumRoute = ProblemsThreeSumRouteImport.update({
   id: '/problems/three-sum',
   path: '/problems/three-sum',
@@ -38,6 +66,23 @@ const ProblemsThreeSumRoute = ProblemsThreeSumRouteImport.update({
 const ProblemsSubarraySumKRoute = ProblemsSubarraySumKRouteImport.update({
   id: '/problems/subarray-sum-k',
   path: '/problems/subarray-sum-k',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsSingleElementSortedRoute =
+  ProblemsSingleElementSortedRouteImport.update({
+    id: '/problems/single-element-sorted',
+    path: '/problems/single-element-sorted',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsShortestPathBinaryMatrixRoute =
+  ProblemsShortestPathBinaryMatrixRouteImport.update({
+    id: '/problems/shortest-path-binary-matrix',
+    path: '/problems/shortest-path-binary-matrix',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsRottingOrangesRoute = ProblemsRottingOrangesRouteImport.update({
+  id: '/problems/rotting-oranges',
+  path: '/problems/rotting-oranges',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProblemsRotateImageRoute = ProblemsRotateImageRouteImport.update({
@@ -56,6 +101,44 @@ const ProblemsRemoveDuplicatesIiRoute =
     path: '/problems/remove-duplicates-ii',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ProblemsRandomizedSetRoute = ProblemsRandomizedSetRouteImport.update({
+  id: '/problems/randomized-set',
+  path: '/problems/randomized-set',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsOrderedStreamRoute = ProblemsOrderedStreamRouteImport.update({
+  id: '/problems/ordered-stream',
+  path: '/problems/ordered-stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsMergeSortedArrayRoute =
+  ProblemsMergeSortedArrayRouteImport.update({
+    id: '/problems/merge-sorted-array',
+    path: '/problems/merge-sorted-array',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsMagicDictionaryRoute = ProblemsMagicDictionaryRouteImport.update({
+  id: '/problems/magic-dictionary',
+  path: '/problems/magic-dictionary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsLruCacheRoute = ProblemsLruCacheRouteImport.update({
+  id: '/problems/lru-cache',
+  path: '/problems/lru-cache',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsLongestCommonPrefixRoute =
+  ProblemsLongestCommonPrefixRouteImport.update({
+    id: '/problems/longest-common-prefix',
+    path: '/problems/longest-common-prefix',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProblemsFruitIntoBasketsRoute =
+  ProblemsFruitIntoBasketsRouteImport.update({
+    id: '/problems/fruit-into-baskets',
+    path: '/problems/fruit-into-baskets',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProblemsFlattenMultilevelListRoute =
   ProblemsFlattenMultilevelListRouteImport.update({
     id: '/problems/flatten-multilevel-list',
@@ -67,99 +150,231 @@ const ProblemsDecodeStringRoute = ProblemsDecodeStringRouteImport.update({
   path: '/problems/decode-string',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProblemsContainerWaterRoute = ProblemsContainerWaterRouteImport.update({
+  id: '/problems/container-water',
+  path: '/problems/container-water',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsBrowserHistoryRoute = ProblemsBrowserHistoryRouteImport.update({
+  id: '/problems/browser-history',
+  path: '/problems/browser-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProblemsBasicCalculatorIiRoute =
   ProblemsBasicCalculatorIiRouteImport.update({
     id: '/problems/basic-calculator-ii',
     path: '/problems/basic-calculator-ii',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ProblemsAddTwoNumbersRoute = ProblemsAddTwoNumbersRouteImport.update({
+  id: '/problems/add-two-numbers',
+  path: '/problems/add-two-numbers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProblemsAddBinaryRoute = ProblemsAddBinaryRouteImport.update({
+  id: '/problems/add-binary',
+  path: '/problems/add-binary',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/problems/add-binary': typeof ProblemsAddBinaryRoute
+  '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
+  '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
+  '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
+  '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
+  '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
+  '/problems/lru-cache': typeof ProblemsLruCacheRoute
+  '/problems/magic-dictionary': typeof ProblemsMagicDictionaryRoute
+  '/problems/merge-sorted-array': typeof ProblemsMergeSortedArrayRoute
+  '/problems/ordered-stream': typeof ProblemsOrderedStreamRoute
+  '/problems/randomized-set': typeof ProblemsRandomizedSetRoute
   '/problems/remove-duplicates-ii': typeof ProblemsRemoveDuplicatesIiRoute
   '/problems/reverse-integer': typeof ProblemsReverseIntegerRoute
   '/problems/rotate-image': typeof ProblemsRotateImageRoute
+  '/problems/rotting-oranges': typeof ProblemsRottingOrangesRoute
+  '/problems/shortest-path-binary-matrix': typeof ProblemsShortestPathBinaryMatrixRoute
+  '/problems/single-element-sorted': typeof ProblemsSingleElementSortedRoute
   '/problems/subarray-sum-k': typeof ProblemsSubarraySumKRoute
   '/problems/three-sum': typeof ProblemsThreeSumRoute
+  '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
+  '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/problems/add-binary': typeof ProblemsAddBinaryRoute
+  '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
+  '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
+  '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
+  '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
+  '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
+  '/problems/lru-cache': typeof ProblemsLruCacheRoute
+  '/problems/magic-dictionary': typeof ProblemsMagicDictionaryRoute
+  '/problems/merge-sorted-array': typeof ProblemsMergeSortedArrayRoute
+  '/problems/ordered-stream': typeof ProblemsOrderedStreamRoute
+  '/problems/randomized-set': typeof ProblemsRandomizedSetRoute
   '/problems/remove-duplicates-ii': typeof ProblemsRemoveDuplicatesIiRoute
   '/problems/reverse-integer': typeof ProblemsReverseIntegerRoute
   '/problems/rotate-image': typeof ProblemsRotateImageRoute
+  '/problems/rotting-oranges': typeof ProblemsRottingOrangesRoute
+  '/problems/shortest-path-binary-matrix': typeof ProblemsShortestPathBinaryMatrixRoute
+  '/problems/single-element-sorted': typeof ProblemsSingleElementSortedRoute
   '/problems/subarray-sum-k': typeof ProblemsSubarraySumKRoute
   '/problems/three-sum': typeof ProblemsThreeSumRoute
+  '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
+  '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/problems/add-binary': typeof ProblemsAddBinaryRoute
+  '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
+  '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
+  '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
+  '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
+  '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
+  '/problems/lru-cache': typeof ProblemsLruCacheRoute
+  '/problems/magic-dictionary': typeof ProblemsMagicDictionaryRoute
+  '/problems/merge-sorted-array': typeof ProblemsMergeSortedArrayRoute
+  '/problems/ordered-stream': typeof ProblemsOrderedStreamRoute
+  '/problems/randomized-set': typeof ProblemsRandomizedSetRoute
   '/problems/remove-duplicates-ii': typeof ProblemsRemoveDuplicatesIiRoute
   '/problems/reverse-integer': typeof ProblemsReverseIntegerRoute
   '/problems/rotate-image': typeof ProblemsRotateImageRoute
+  '/problems/rotting-oranges': typeof ProblemsRottingOrangesRoute
+  '/problems/shortest-path-binary-matrix': typeof ProblemsShortestPathBinaryMatrixRoute
+  '/problems/single-element-sorted': typeof ProblemsSingleElementSortedRoute
   '/problems/subarray-sum-k': typeof ProblemsSubarraySumKRoute
   '/problems/three-sum': typeof ProblemsThreeSumRoute
+  '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
+  '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/problems/add-binary'
+    | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
+    | '/problems/browser-history'
+    | '/problems/container-water'
     | '/problems/decode-string'
     | '/problems/flatten-multilevel-list'
+    | '/problems/fruit-into-baskets'
+    | '/problems/longest-common-prefix'
+    | '/problems/lru-cache'
+    | '/problems/magic-dictionary'
+    | '/problems/merge-sorted-array'
+    | '/problems/ordered-stream'
+    | '/problems/randomized-set'
     | '/problems/remove-duplicates-ii'
     | '/problems/reverse-integer'
     | '/problems/rotate-image'
+    | '/problems/rotting-oranges'
+    | '/problems/shortest-path-binary-matrix'
+    | '/problems/single-element-sorted'
     | '/problems/subarray-sum-k'
     | '/problems/three-sum'
+    | '/problems/top-k-frequent-words'
+    | '/problems/underground-system'
     | '/problems/validate-bst'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/problems/add-binary'
+    | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
+    | '/problems/browser-history'
+    | '/problems/container-water'
     | '/problems/decode-string'
     | '/problems/flatten-multilevel-list'
+    | '/problems/fruit-into-baskets'
+    | '/problems/longest-common-prefix'
+    | '/problems/lru-cache'
+    | '/problems/magic-dictionary'
+    | '/problems/merge-sorted-array'
+    | '/problems/ordered-stream'
+    | '/problems/randomized-set'
     | '/problems/remove-duplicates-ii'
     | '/problems/reverse-integer'
     | '/problems/rotate-image'
+    | '/problems/rotting-oranges'
+    | '/problems/shortest-path-binary-matrix'
+    | '/problems/single-element-sorted'
     | '/problems/subarray-sum-k'
     | '/problems/three-sum'
+    | '/problems/top-k-frequent-words'
+    | '/problems/underground-system'
     | '/problems/validate-bst'
   id:
     | '__root__'
     | '/'
+    | '/problems/add-binary'
+    | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
+    | '/problems/browser-history'
+    | '/problems/container-water'
     | '/problems/decode-string'
     | '/problems/flatten-multilevel-list'
+    | '/problems/fruit-into-baskets'
+    | '/problems/longest-common-prefix'
+    | '/problems/lru-cache'
+    | '/problems/magic-dictionary'
+    | '/problems/merge-sorted-array'
+    | '/problems/ordered-stream'
+    | '/problems/randomized-set'
     | '/problems/remove-duplicates-ii'
     | '/problems/reverse-integer'
     | '/problems/rotate-image'
+    | '/problems/rotting-oranges'
+    | '/problems/shortest-path-binary-matrix'
+    | '/problems/single-element-sorted'
     | '/problems/subarray-sum-k'
     | '/problems/three-sum'
+    | '/problems/top-k-frequent-words'
+    | '/problems/underground-system'
     | '/problems/validate-bst'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProblemsAddBinaryRoute: typeof ProblemsAddBinaryRoute
+  ProblemsAddTwoNumbersRoute: typeof ProblemsAddTwoNumbersRoute
   ProblemsBasicCalculatorIiRoute: typeof ProblemsBasicCalculatorIiRoute
+  ProblemsBrowserHistoryRoute: typeof ProblemsBrowserHistoryRoute
+  ProblemsContainerWaterRoute: typeof ProblemsContainerWaterRoute
   ProblemsDecodeStringRoute: typeof ProblemsDecodeStringRoute
   ProblemsFlattenMultilevelListRoute: typeof ProblemsFlattenMultilevelListRoute
+  ProblemsFruitIntoBasketsRoute: typeof ProblemsFruitIntoBasketsRoute
+  ProblemsLongestCommonPrefixRoute: typeof ProblemsLongestCommonPrefixRoute
+  ProblemsLruCacheRoute: typeof ProblemsLruCacheRoute
+  ProblemsMagicDictionaryRoute: typeof ProblemsMagicDictionaryRoute
+  ProblemsMergeSortedArrayRoute: typeof ProblemsMergeSortedArrayRoute
+  ProblemsOrderedStreamRoute: typeof ProblemsOrderedStreamRoute
+  ProblemsRandomizedSetRoute: typeof ProblemsRandomizedSetRoute
   ProblemsRemoveDuplicatesIiRoute: typeof ProblemsRemoveDuplicatesIiRoute
   ProblemsReverseIntegerRoute: typeof ProblemsReverseIntegerRoute
   ProblemsRotateImageRoute: typeof ProblemsRotateImageRoute
+  ProblemsRottingOrangesRoute: typeof ProblemsRottingOrangesRoute
+  ProblemsShortestPathBinaryMatrixRoute: typeof ProblemsShortestPathBinaryMatrixRoute
+  ProblemsSingleElementSortedRoute: typeof ProblemsSingleElementSortedRoute
   ProblemsSubarraySumKRoute: typeof ProblemsSubarraySumKRoute
   ProblemsThreeSumRoute: typeof ProblemsThreeSumRoute
+  ProblemsTopKFrequentWordsRoute: typeof ProblemsTopKFrequentWordsRoute
+  ProblemsUndergroundSystemRoute: typeof ProblemsUndergroundSystemRoute
   ProblemsValidateBstRoute: typeof ProblemsValidateBstRoute
 }
 
@@ -179,6 +394,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsValidateBstRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/underground-system': {
+      id: '/problems/underground-system'
+      path: '/problems/underground-system'
+      fullPath: '/problems/underground-system'
+      preLoaderRoute: typeof ProblemsUndergroundSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/top-k-frequent-words': {
+      id: '/problems/top-k-frequent-words'
+      path: '/problems/top-k-frequent-words'
+      fullPath: '/problems/top-k-frequent-words'
+      preLoaderRoute: typeof ProblemsTopKFrequentWordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/three-sum': {
       id: '/problems/three-sum'
       path: '/problems/three-sum'
@@ -191,6 +420,27 @@ declare module '@tanstack/react-router' {
       path: '/problems/subarray-sum-k'
       fullPath: '/problems/subarray-sum-k'
       preLoaderRoute: typeof ProblemsSubarraySumKRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/single-element-sorted': {
+      id: '/problems/single-element-sorted'
+      path: '/problems/single-element-sorted'
+      fullPath: '/problems/single-element-sorted'
+      preLoaderRoute: typeof ProblemsSingleElementSortedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/shortest-path-binary-matrix': {
+      id: '/problems/shortest-path-binary-matrix'
+      path: '/problems/shortest-path-binary-matrix'
+      fullPath: '/problems/shortest-path-binary-matrix'
+      preLoaderRoute: typeof ProblemsShortestPathBinaryMatrixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/rotting-oranges': {
+      id: '/problems/rotting-oranges'
+      path: '/problems/rotting-oranges'
+      fullPath: '/problems/rotting-oranges'
+      preLoaderRoute: typeof ProblemsRottingOrangesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/problems/rotate-image': {
@@ -214,6 +464,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsRemoveDuplicatesIiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/randomized-set': {
+      id: '/problems/randomized-set'
+      path: '/problems/randomized-set'
+      fullPath: '/problems/randomized-set'
+      preLoaderRoute: typeof ProblemsRandomizedSetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/ordered-stream': {
+      id: '/problems/ordered-stream'
+      path: '/problems/ordered-stream'
+      fullPath: '/problems/ordered-stream'
+      preLoaderRoute: typeof ProblemsOrderedStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/merge-sorted-array': {
+      id: '/problems/merge-sorted-array'
+      path: '/problems/merge-sorted-array'
+      fullPath: '/problems/merge-sorted-array'
+      preLoaderRoute: typeof ProblemsMergeSortedArrayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/magic-dictionary': {
+      id: '/problems/magic-dictionary'
+      path: '/problems/magic-dictionary'
+      fullPath: '/problems/magic-dictionary'
+      preLoaderRoute: typeof ProblemsMagicDictionaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/lru-cache': {
+      id: '/problems/lru-cache'
+      path: '/problems/lru-cache'
+      fullPath: '/problems/lru-cache'
+      preLoaderRoute: typeof ProblemsLruCacheRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/longest-common-prefix': {
+      id: '/problems/longest-common-prefix'
+      path: '/problems/longest-common-prefix'
+      fullPath: '/problems/longest-common-prefix'
+      preLoaderRoute: typeof ProblemsLongestCommonPrefixRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/fruit-into-baskets': {
+      id: '/problems/fruit-into-baskets'
+      path: '/problems/fruit-into-baskets'
+      fullPath: '/problems/fruit-into-baskets'
+      preLoaderRoute: typeof ProblemsFruitIntoBasketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/flatten-multilevel-list': {
       id: '/problems/flatten-multilevel-list'
       path: '/problems/flatten-multilevel-list'
@@ -228,6 +527,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsDecodeStringRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/container-water': {
+      id: '/problems/container-water'
+      path: '/problems/container-water'
+      fullPath: '/problems/container-water'
+      preLoaderRoute: typeof ProblemsContainerWaterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/browser-history': {
+      id: '/problems/browser-history'
+      path: '/problems/browser-history'
+      fullPath: '/problems/browser-history'
+      preLoaderRoute: typeof ProblemsBrowserHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/basic-calculator-ii': {
       id: '/problems/basic-calculator-ii'
       path: '/problems/basic-calculator-ii'
@@ -235,19 +548,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsBasicCalculatorIiRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems/add-two-numbers': {
+      id: '/problems/add-two-numbers'
+      path: '/problems/add-two-numbers'
+      fullPath: '/problems/add-two-numbers'
+      preLoaderRoute: typeof ProblemsAddTwoNumbersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/problems/add-binary': {
+      id: '/problems/add-binary'
+      path: '/problems/add-binary'
+      fullPath: '/problems/add-binary'
+      preLoaderRoute: typeof ProblemsAddBinaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProblemsAddBinaryRoute: ProblemsAddBinaryRoute,
+  ProblemsAddTwoNumbersRoute: ProblemsAddTwoNumbersRoute,
   ProblemsBasicCalculatorIiRoute: ProblemsBasicCalculatorIiRoute,
+  ProblemsBrowserHistoryRoute: ProblemsBrowserHistoryRoute,
+  ProblemsContainerWaterRoute: ProblemsContainerWaterRoute,
   ProblemsDecodeStringRoute: ProblemsDecodeStringRoute,
   ProblemsFlattenMultilevelListRoute: ProblemsFlattenMultilevelListRoute,
+  ProblemsFruitIntoBasketsRoute: ProblemsFruitIntoBasketsRoute,
+  ProblemsLongestCommonPrefixRoute: ProblemsLongestCommonPrefixRoute,
+  ProblemsLruCacheRoute: ProblemsLruCacheRoute,
+  ProblemsMagicDictionaryRoute: ProblemsMagicDictionaryRoute,
+  ProblemsMergeSortedArrayRoute: ProblemsMergeSortedArrayRoute,
+  ProblemsOrderedStreamRoute: ProblemsOrderedStreamRoute,
+  ProblemsRandomizedSetRoute: ProblemsRandomizedSetRoute,
   ProblemsRemoveDuplicatesIiRoute: ProblemsRemoveDuplicatesIiRoute,
   ProblemsReverseIntegerRoute: ProblemsReverseIntegerRoute,
   ProblemsRotateImageRoute: ProblemsRotateImageRoute,
+  ProblemsRottingOrangesRoute: ProblemsRottingOrangesRoute,
+  ProblemsShortestPathBinaryMatrixRoute: ProblemsShortestPathBinaryMatrixRoute,
+  ProblemsSingleElementSortedRoute: ProblemsSingleElementSortedRoute,
   ProblemsSubarraySumKRoute: ProblemsSubarraySumKRoute,
   ProblemsThreeSumRoute: ProblemsThreeSumRoute,
+  ProblemsTopKFrequentWordsRoute: ProblemsTopKFrequentWordsRoute,
+  ProblemsUndergroundSystemRoute: ProblemsUndergroundSystemRoute,
   ProblemsValidateBstRoute: ProblemsValidateBstRoute,
 }
 export const routeTree = rootRouteImport
