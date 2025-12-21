@@ -393,8 +393,8 @@ function HomePage() {
             </div>
           </div>
 
-          {/* Random Problem Button */}
-          <div className="flex justify-center mt-10">
+          {/* Action Buttons */}
+          <div className="flex flex-wrap justify-center gap-4 mt-10">
             <button
               onClick={goToRandomProblem}
               className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-display font-semibold text-lg shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 overflow-hidden"
@@ -407,6 +407,31 @@ function HomePage() {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
+
+            <Link
+              to="/create"
+              className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 text-white font-display font-semibold text-lg shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 transition-all duration-300 hover:scale-105 overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Your Own
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </Link>
+
+            <Link
+              to="/gallery"
+              className="group relative px-8 py-4 rounded-2xl bg-slate-800 border border-slate-700 text-white font-display font-semibold text-lg hover:bg-slate-700 transition-all duration-300 hover:scale-105"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Community Gallery
+              </span>
+            </Link>
           </div>
         </div>
 

@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as generateVisualization from "../generateVisualization.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as visualizations from "../visualizations.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +19,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  generateVisualization: typeof generateVisualization;
   myFunctions: typeof myFunctions;
+  visualizations: typeof visualizations;
 }>;
 
 /**

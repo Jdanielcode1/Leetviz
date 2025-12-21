@@ -9,7 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VizIdRouteImport } from './routes/viz/$id'
 import { Route as ProblemsValidateBstRouteImport } from './routes/problems/validate-bst'
 import { Route as ProblemsUndergroundSystemRouteImport } from './routes/problems/underground-system'
 import { Route as ProblemsTopKFrequentWordsRouteImport } from './routes/problems/top-k-frequent-words'
@@ -36,9 +39,24 @@ import { Route as ProblemsBasicCalculatorIiRouteImport } from './routes/problems
 import { Route as ProblemsAddTwoNumbersRouteImport } from './routes/problems/add-two-numbers'
 import { Route as ProblemsAddBinaryRouteImport } from './routes/problems/add-binary'
 
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VizIdRoute = VizIdRouteImport.update({
+  id: '/viz/$id',
+  path: '/viz/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProblemsValidateBstRoute = ProblemsValidateBstRouteImport.update({
@@ -179,6 +197,8 @@ const ProblemsAddBinaryRoute = ProblemsAddBinaryRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -204,9 +224,12 @@ export interface FileRoutesByFullPath {
   '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
+  '/viz/$id': typeof VizIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -232,10 +255,13 @@ export interface FileRoutesByTo {
   '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
+  '/viz/$id': typeof VizIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/create': typeof CreateRoute
+  '/gallery': typeof GalleryRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -261,11 +287,14 @@ export interface FileRoutesById {
   '/problems/top-k-frequent-words': typeof ProblemsTopKFrequentWordsRoute
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
+  '/viz/$id': typeof VizIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/create'
+    | '/gallery'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -291,9 +320,12 @@ export interface FileRouteTypes {
     | '/problems/top-k-frequent-words'
     | '/problems/underground-system'
     | '/problems/validate-bst'
+    | '/viz/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/create'
+    | '/gallery'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -319,9 +351,12 @@ export interface FileRouteTypes {
     | '/problems/top-k-frequent-words'
     | '/problems/underground-system'
     | '/problems/validate-bst'
+    | '/viz/$id'
   id:
     | '__root__'
     | '/'
+    | '/create'
+    | '/gallery'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -347,10 +382,13 @@ export interface FileRouteTypes {
     | '/problems/top-k-frequent-words'
     | '/problems/underground-system'
     | '/problems/validate-bst'
+    | '/viz/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateRoute: typeof CreateRoute
+  GalleryRoute: typeof GalleryRoute
   ProblemsAddBinaryRoute: typeof ProblemsAddBinaryRoute
   ProblemsAddTwoNumbersRoute: typeof ProblemsAddTwoNumbersRoute
   ProblemsBasicCalculatorIiRoute: typeof ProblemsBasicCalculatorIiRoute
@@ -376,15 +414,37 @@ export interface RootRouteChildren {
   ProblemsTopKFrequentWordsRoute: typeof ProblemsTopKFrequentWordsRoute
   ProblemsUndergroundSystemRoute: typeof ProblemsUndergroundSystemRoute
   ProblemsValidateBstRoute: typeof ProblemsValidateBstRoute
+  VizIdRoute: typeof VizIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/viz/$id': {
+      id: '/viz/$id'
+      path: '/viz/$id'
+      fullPath: '/viz/$id'
+      preLoaderRoute: typeof VizIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/problems/validate-bst': {
@@ -567,6 +627,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateRoute: CreateRoute,
+  GalleryRoute: GalleryRoute,
   ProblemsAddBinaryRoute: ProblemsAddBinaryRoute,
   ProblemsAddTwoNumbersRoute: ProblemsAddTwoNumbersRoute,
   ProblemsBasicCalculatorIiRoute: ProblemsBasicCalculatorIiRoute,
@@ -592,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProblemsTopKFrequentWordsRoute: ProblemsTopKFrequentWordsRoute,
   ProblemsUndergroundSystemRoute: ProblemsUndergroundSystemRoute,
   ProblemsValidateBstRoute: ProblemsValidateBstRoute,
+  VizIdRoute: VizIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
