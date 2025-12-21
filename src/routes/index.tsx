@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -249,6 +249,14 @@ const difficultyColors = {
 }
 
 function HomePage() {
+  const navigate = useNavigate()
+
+  const goToRandomProblem = () => {
+    const randomIndex = Math.floor(Math.random() * problems.length)
+    const randomProblem = problems[randomIndex]
+    navigate({ to: randomProblem.path })
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <style>{`
@@ -383,6 +391,22 @@ function HomePage() {
               </div>
               <div className="text-slate-500 text-sm font-display mt-1">Interactive</div>
             </div>
+          </div>
+
+          {/* Random Problem Button */}
+          <div className="flex justify-center mt-10">
+            <button
+              onClick={goToRandomProblem}
+              className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-display font-semibold text-lg shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-300 hover:scale-105 overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Pick Random Problem
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </button>
           </div>
         </div>
 

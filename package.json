@@ -11,7 +11,10 @@
     "build": "vite build && tsc --noEmit",
     "start": "node .output/server/index.mjs",
     "format": "prettier --write .",
-    "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "deploy": "npm run build && wrangler deploy",
+    "preview": "npm run build && vite preview",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@convex-dev/react-query": "^0.0.0-alpha.11",
@@ -24,6 +27,7 @@
     "react-dom": "^19.2.1"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.17.1",
     "@convex-dev/eslint-plugin": "^1.1.1",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/eslint-config": "^0.3.2",
@@ -35,6 +39,7 @@
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
     "vite": "^7.1.5",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "wrangler": "^4.54.0"
   }
 }
