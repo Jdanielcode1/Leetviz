@@ -18,7 +18,7 @@ function CreateVisualizationPage() {
   const generateMutation = useMutation({
     mutationFn: useConvexAction(api.generateVisualization.generateVisualization),
     onSuccess: (id) => {
-      navigate({ to: '/viz/$id', params: { id } })
+      navigate({ to: '/viz/$id', params: { id: id as string } })
     },
     onError: (err) => {
       setError(err instanceof Error ? err.message : 'Failed to generate visualization')

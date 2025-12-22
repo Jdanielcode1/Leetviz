@@ -536,70 +536,91 @@ function RottingOrangesVisualization() {
   }
 
   return (
-    <div className="min-h-screen text-slate-100" style={{ backgroundColor: '#0a1628' }}>
+    <div className="min-h-screen bg-[#0a1628] text-slate-100">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
         .font-display { font-family: 'Outfit', sans-serif; }
+
         .blueprint-grid {
           background-image:
             linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
             linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
           background-size: 20px 20px;
         }
+
+        .code-highlight {
+          background: linear-gradient(90deg, rgba(251, 146, 60, 0.15) 0%, transparent 100%);
+          border-left: 2px solid #fb923c;
+        }
+
+        .glow-orange { box-shadow: 0 0 15px rgba(251, 146, 60, 0.4); }
+        .glow-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
+        .glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
       `}</style>
 
-      {/* Header */}
-      <div className="border-b border-slate-700/50 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-cyan-400 font-mono text-sm">#994</span>
-                <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-400/10 text-amber-400 border border-amber-400/30">
-                  Medium
-                </span>
+      <div className="blueprint-grid min-h-screen">
+        <div className="max-w-[1600px] mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <a
+                href="/"
+                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
+              >
+                &larr; Back
+              </a>
+              <span className="text-slate-700">/</span>
+              <span className="text-cyan-400 font-mono text-sm">problems</span>
+            </div>
+
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  <span className="text-slate-500 font-mono">#994</span>
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    MEDIUM
+                  </span>
+                </div>
+                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
+                  Rotting Oranges
+                </h1>
+                <div className="flex gap-2">
+                  {['Array', 'BFS', 'Matrix'].map((tag) => (
+                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <h1 className="text-2xl font-display font-bold text-slate-100">
-                Rotting Oranges
-              </h1>
-            </div>
-            <a
-              href="/"
-              className="text-slate-400 hover:text-slate-200 transition-colors font-display"
-            >
-              Back to Problems
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Test Case Selector */}
-      <div className="border-b border-slate-700/50 bg-slate-900/30">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center gap-4">
-            <span className="text-slate-400 text-sm font-display">Test Case:</span>
-            <div className="flex gap-2 flex-wrap">
-              {TEST_CASES.map((tc) => (
-                <button
-                  key={tc.id}
-                  onClick={() => handleTestCaseChange(tc)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    selectedTestCase.id === tc.id
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                      : 'bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:bg-slate-800'
-                  }`}
-                >
-                  {tc.name}
-                </button>
-              ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+          {/* Test Case Selector */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
+              <div className="flex gap-2 flex-wrap">
+                {TEST_CASES.map((tc) => (
+                  <button
+                    key={tc.id}
+                    onClick={() => handleTestCaseChange(tc)}
+                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
+                      selectedTestCase.id === tc.id
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
+                    }`}
+                  >
+                    {tc.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
         <div className="grid grid-cols-2 gap-6">
           {/* Code Panel */}
           <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 overflow-hidden">
@@ -806,9 +827,10 @@ function RottingOrangesVisualization() {
           </div>
         </div>
 
-        {/* Description */}
-        <div className="mt-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
-          <p className="text-slate-300 font-display">{step.description}</p>
+          {/* Description */}
+          <div className="mt-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
+            <p className="text-slate-300 font-display">{step.description}</p>
+          </div>
         </div>
       </div>
     </div>

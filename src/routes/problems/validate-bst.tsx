@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/problems/validate-bst')({
   component: ValidateBSTVisualization,
@@ -481,41 +481,48 @@ function ValidateBSTVisualization() {
         }
       `}</style>
 
-      <div className="max-w-[1600px] mx-auto px-8 py-6 blueprint-grid min-h-screen">
-        {/* Navigation */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-cyan-400/70 hover:text-cyan-400 transition-colors mb-8 font-display text-sm tracking-wide group"
-        >
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          BACK TO PROBLEMS
-        </Link>
-
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="text-cyan-400/60 font-mono text-sm mb-1">LEETCODE #98</div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-2">
-                Validate Binary Search Tree
-              </h1>
-              <div className="flex items-center gap-3">
-                <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-mono rounded border border-orange-500/30">
-                  MEDIUM
-                </span>
-                <span className="text-slate-500 text-sm font-mono">Tree • BST • Recursion</span>
-              </div>
+      <div className="blueprint-grid min-h-screen">
+        <div className="max-w-[1600px] mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <a
+                href="/"
+                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
+              >
+                &larr; Back
+              </a>
+              <span className="text-slate-700">/</span>
+              <span className="text-cyan-400 font-mono text-sm">problems</span>
             </div>
-            <button
-              onClick={() => setShowProblem(!showProblem)}
-              className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-mono transition-all"
-            >
-              {showProblem ? 'HIDE PROBLEM' : 'SHOW PROBLEM'}
-            </button>
+
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  <span className="text-slate-500 font-mono">#98</span>
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    MEDIUM
+                  </span>
+                </div>
+                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
+                  Validate Binary Search Tree
+                </h1>
+                <div className="flex gap-2">
+                  {['Tree', 'BST', 'Recursion'].map((tag) => (
+                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProblem(!showProblem)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 text-sm font-mono transition-all"
+              >
+                {showProblem ? 'Hide Problem' : 'Show Problem'}
+              </button>
+            </div>
           </div>
-        </header>
 
         {/* Problem Description */}
         {showProblem && (
@@ -849,9 +856,10 @@ function ValidateBSTVisualization() {
           </div>
         </div>
 
-        {/* Keyboard shortcuts */}
-        <div className="mt-6 text-center text-slate-600 font-mono text-xs">
-          KEYBOARD: ← Previous | → Next | Space Play/Pause
+          {/* Keyboard shortcuts */}
+          <div className="mt-6 text-center text-slate-600 font-mono text-xs">
+            KEYBOARD: ← Previous | → Next | Space Play/Pause
+          </div>
         </div>
       </div>
     </div>

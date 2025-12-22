@@ -445,31 +445,42 @@ function ContainerWaterVisualization() {
         }
       `}</style>
 
-      {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <span className="text-slate-500 font-code text-sm">#11</span>
-                <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-400/10 text-amber-400 border border-amber-400/30">
-                  Medium
-                </span>
-              </div>
-              <h1 className="text-2xl font-display font-bold text-slate-100">Container With Most Water</h1>
+      <div className="blueprint-grid min-h-screen">
+        <div className="max-w-[1600px] mx-auto px-6 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <a
+                href="/"
+                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
+              >
+                &larr; Back
+              </a>
+              <span className="text-slate-700">/</span>
+              <span className="text-cyan-400 font-mono text-sm">problems</span>
             </div>
-            <a
-              href="/"
-              className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors"
-            >
-              Back to Problems
-            </a>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6 blueprint-grid min-h-[calc(100vh-80px)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-2">
+                  <span className="text-slate-500 font-mono">#11</span>
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    MEDIUM
+                  </span>
+                </div>
+                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
+                  Container With Most Water
+                </h1>
+                <div className="flex gap-2">
+                  {['Array', 'Two Pointers', 'Greedy'].map((tag) => (
+                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         {/* Test Case Selector */}
         <div className="mb-6">
           <div className="flex items-center gap-4 mb-3">
@@ -724,33 +735,34 @@ function ContainerWaterVisualization() {
           </button>
         </div>
 
-        {/* Algorithm Insight */}
-        <div className="mt-8 bg-slate-900/70 rounded-xl border border-slate-700 p-6">
-          <h3 className="text-lg font-display font-semibold text-slate-100 mb-4">Algorithm Insight</h3>
-          <div className="grid md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <h4 className="text-cyan-400 font-medium mb-2">Two Pointers Strategy</h4>
-              <p className="text-slate-400">
-                Start with maximum width (pointers at both ends). The area is limited by the shorter line,
-                so we always move the shorter pointer inward hoping to find a taller line.
-              </p>
+          {/* Algorithm Insight */}
+          <div className="mt-8 bg-slate-900/70 rounded-xl border border-slate-700 p-6">
+            <h3 className="text-lg font-display font-semibold text-slate-100 mb-4">Algorithm Insight</h3>
+            <div className="grid md:grid-cols-2 gap-6 text-sm">
+              <div>
+                <h4 className="text-cyan-400 font-medium mb-2">Two Pointers Strategy</h4>
+                <p className="text-slate-400">
+                  Start with maximum width (pointers at both ends). The area is limited by the shorter line,
+                  so we always move the shorter pointer inward hoping to find a taller line.
+                </p>
+              </div>
+              <div>
+                <h4 className="text-emerald-400 font-medium mb-2">Why Move the Shorter Side?</h4>
+                <p className="text-slate-400">
+                  Moving the taller side can only decrease or maintain area (width decreases, height still limited by shorter).
+                  Moving shorter side might find a taller line that increases area.
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-emerald-400 font-medium mb-2">Why Move the Shorter Side?</h4>
-              <p className="text-slate-400">
-                Moving the taller side can only decrease or maintain area (width decreases, height still limited by shorter).
-                Moving shorter side might find a taller line that increases area.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-slate-700 flex gap-6">
-            <div>
-              <span className="text-slate-500">Time:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(n)</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Space:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(1)</span>
+            <div className="mt-4 pt-4 border-t border-slate-700 flex gap-6">
+              <div>
+                <span className="text-slate-500">Time:</span>
+                <span className="text-emerald-300 ml-2 font-code">O(n)</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Space:</span>
+                <span className="text-emerald-300 ml-2 font-code">O(1)</span>
+              </div>
             </div>
           </div>
         </div>

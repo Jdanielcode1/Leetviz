@@ -1,9 +1,12 @@
 "use node";
 
+import Anthropic from "@anthropic-ai/sdk";
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+
+const anthropic = new Anthropic();
 
 const CLAUDE_PROMPT = `You are an algorithm visualization generator. Analyze the provided code and test input, then generate a step-by-step visualization that shows how the algorithm executes.
 
@@ -44,11 +47,6 @@ export const generateVisualization = action({
   },
   returns: v.id("visualizations"),
   handler: async (ctx, args): Promise<Id<"visualizations">> => {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY environment variable is not set");
-    }
-
     const userPrompt = `Code (${args.language}):
 \`\`\`${args.language}
 ${args.code}
@@ -59,33 +57,19 @@ ${args.testInput}
 
 Generate the visualization JSON:`;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 8192,
-        system: CLAUDE_PROMPT,
-        messages: [
-          {
-            role: "user",
-            content: userPrompt,
-          },
-        ],
-      }),
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-5-20241022",
+      max_tokens: 8192,
+      system: CLAUDE_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Claude API error: ${response.status} - ${error}`);
-    }
-
-    const data = await response.json();
-    const content = data.content[0];
+    const content = message.content[0];
 
     if (content.type !== "text") {
       throw new Error("Unexpected response type from Claude");
