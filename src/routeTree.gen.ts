@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProblemListRouteImport } from './routes/problem-list'
 import { Route as GalleryRouteImport } from './routes/gallery'
@@ -35,6 +33,7 @@ import { Route as ProblemsLruCacheRouteImport } from './routes/problems/lru-cach
 import { Route as ProblemsLongestCommonPrefixRouteImport } from './routes/problems/longest-common-prefix'
 import { Route as ProblemsFruitIntoBasketsRouteImport } from './routes/problems/fruit-into-baskets'
 import { Route as ProblemsFlattenMultilevelListRouteImport } from './routes/problems/flatten-multilevel-list'
+import { Route as ProblemsFizzBuzzRouteImport } from './routes/problems/fizz-buzz'
 import { Route as ProblemsDecodeStringRouteImport } from './routes/problems/decode-string'
 import { Route as ProblemsContainerWaterRouteImport } from './routes/problems/container-water'
 import { Route as ProblemsBrowserHistoryRouteImport } from './routes/problems/browser-history'
@@ -43,13 +42,6 @@ import { Route as ProblemsAddTwoNumbersRouteImport } from './routes/problems/add
 import { Route as ProblemsAddBinaryRouteImport } from './routes/problems/add-binary'
 import { Route as ProblemsLayoutRouteImport } from './routes/problems/_layout'
 
-const ProblemsRouteImport = createFileRoute('/problems')()
-
-const ProblemsRoute = ProblemsRouteImport.update({
-  id: '/problems',
-  path: '/problems',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProblemListRoute = ProblemListRouteImport.update({
   id: '/problem-list',
   path: '/problem-list',
@@ -179,6 +171,11 @@ const ProblemsFlattenMultilevelListRoute =
     path: '/flatten-multilevel-list',
     getParentRoute: () => ProblemsRoute,
   } as any)
+const ProblemsFizzBuzzRoute = ProblemsFizzBuzzRouteImport.update({
+  id: '/problems/fizz-buzz',
+  path: '/problems/fizz-buzz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProblemsDecodeStringRoute = ProblemsDecodeStringRouteImport.update({
   id: '/decode-string',
   path: '/decode-string',
@@ -227,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
   '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
+  '/problems/fizz-buzz': typeof ProblemsFizzBuzzRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
   '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
   '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
@@ -260,6 +258,7 @@ export interface FileRoutesByTo {
   '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
   '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
+  '/problems/fizz-buzz': typeof ProblemsFizzBuzzRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
   '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
   '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
@@ -287,7 +286,6 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/gallery': typeof GalleryRoute
   '/problem-list': typeof ProblemListRoute
-  '/problems': typeof ProblemsRouteWithChildren
   '/problems/_layout': typeof ProblemsLayoutRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
@@ -295,6 +293,7 @@ export interface FileRoutesById {
   '/problems/browser-history': typeof ProblemsBrowserHistoryRoute
   '/problems/container-water': typeof ProblemsContainerWaterRoute
   '/problems/decode-string': typeof ProblemsDecodeStringRoute
+  '/problems/fizz-buzz': typeof ProblemsFizzBuzzRoute
   '/problems/flatten-multilevel-list': typeof ProblemsFlattenMultilevelListRoute
   '/problems/fruit-into-baskets': typeof ProblemsFruitIntoBasketsRoute
   '/problems/longest-common-prefix': typeof ProblemsLongestCommonPrefixRoute
@@ -330,6 +329,7 @@ export interface FileRouteTypes {
     | '/problems/browser-history'
     | '/problems/container-water'
     | '/problems/decode-string'
+    | '/problems/fizz-buzz'
     | '/problems/flatten-multilevel-list'
     | '/problems/fruit-into-baskets'
     | '/problems/longest-common-prefix'
@@ -363,6 +363,7 @@ export interface FileRouteTypes {
     | '/problems/browser-history'
     | '/problems/container-water'
     | '/problems/decode-string'
+    | '/problems/fizz-buzz'
     | '/problems/flatten-multilevel-list'
     | '/problems/fruit-into-baskets'
     | '/problems/longest-common-prefix'
@@ -389,7 +390,6 @@ export interface FileRouteTypes {
     | '/create'
     | '/gallery'
     | '/problem-list'
-    | '/problems'
     | '/problems/_layout'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
@@ -397,6 +397,7 @@ export interface FileRouteTypes {
     | '/problems/browser-history'
     | '/problems/container-water'
     | '/problems/decode-string'
+    | '/problems/fizz-buzz'
     | '/problems/flatten-multilevel-list'
     | '/problems/fruit-into-baskets'
     | '/problems/longest-common-prefix'
@@ -424,19 +425,12 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   GalleryRoute: typeof GalleryRoute
   ProblemListRoute: typeof ProblemListRoute
-  ProblemsRoute: typeof ProblemsRouteWithChildren
+  ProblemsFizzBuzzRoute: typeof ProblemsFizzBuzzRoute
   VizIdRoute: typeof VizIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/problems': {
-      id: '/problems'
-      path: '/problems'
-      fullPath: '/problems'
-      preLoaderRoute: typeof ProblemsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/problem-list': {
       id: '/problem-list'
       path: '/problem-list'
@@ -605,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProblemsFlattenMultilevelListRouteImport
       parentRoute: typeof ProblemsRoute
     }
+    '/problems/fizz-buzz': {
+      id: '/problems/fizz-buzz'
+      path: '/problems/fizz-buzz'
+      fullPath: '/problems/fizz-buzz'
+      preLoaderRoute: typeof ProblemsFizzBuzzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems/decode-string': {
       id: '/problems/decode-string'
       path: '/decode-string'
@@ -649,7 +650,7 @@ declare module '@tanstack/react-router' {
     }
     '/problems/_layout': {
       id: '/problems/_layout'
-      path: '/problems'
+      path: ''
       fullPath: '/problems'
       preLoaderRoute: typeof ProblemsLayoutRouteImport
       parentRoute: typeof ProblemsRoute
@@ -657,74 +658,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ProblemsRouteChildren {
-  ProblemsLayoutRoute: typeof ProblemsLayoutRoute
-  ProblemsAddBinaryRoute: typeof ProblemsAddBinaryRoute
-  ProblemsAddTwoNumbersRoute: typeof ProblemsAddTwoNumbersRoute
-  ProblemsBasicCalculatorIiRoute: typeof ProblemsBasicCalculatorIiRoute
-  ProblemsBrowserHistoryRoute: typeof ProblemsBrowserHistoryRoute
-  ProblemsContainerWaterRoute: typeof ProblemsContainerWaterRoute
-  ProblemsDecodeStringRoute: typeof ProblemsDecodeStringRoute
-  ProblemsFlattenMultilevelListRoute: typeof ProblemsFlattenMultilevelListRoute
-  ProblemsFruitIntoBasketsRoute: typeof ProblemsFruitIntoBasketsRoute
-  ProblemsLongestCommonPrefixRoute: typeof ProblemsLongestCommonPrefixRoute
-  ProblemsLruCacheRoute: typeof ProblemsLruCacheRoute
-  ProblemsMagicDictionaryRoute: typeof ProblemsMagicDictionaryRoute
-  ProblemsMergeSortedArrayRoute: typeof ProblemsMergeSortedArrayRoute
-  ProblemsOrderedStreamRoute: typeof ProblemsOrderedStreamRoute
-  ProblemsRandomizedSetRoute: typeof ProblemsRandomizedSetRoute
-  ProblemsRemoveDuplicatesIiRoute: typeof ProblemsRemoveDuplicatesIiRoute
-  ProblemsReverseIntegerRoute: typeof ProblemsReverseIntegerRoute
-  ProblemsRotateImageRoute: typeof ProblemsRotateImageRoute
-  ProblemsRottingOrangesRoute: typeof ProblemsRottingOrangesRoute
-  ProblemsShortestPathBinaryMatrixRoute: typeof ProblemsShortestPathBinaryMatrixRoute
-  ProblemsSingleElementSortedRoute: typeof ProblemsSingleElementSortedRoute
-  ProblemsSubarraySumKRoute: typeof ProblemsSubarraySumKRoute
-  ProblemsThreeSumRoute: typeof ProblemsThreeSumRoute
-  ProblemsTopKFrequentWordsRoute: typeof ProblemsTopKFrequentWordsRoute
-  ProblemsUndergroundSystemRoute: typeof ProblemsUndergroundSystemRoute
-  ProblemsValidateBstRoute: typeof ProblemsValidateBstRoute
-}
-
-const ProblemsRouteChildren: ProblemsRouteChildren = {
-  ProblemsLayoutRoute: ProblemsLayoutRoute,
-  ProblemsAddBinaryRoute: ProblemsAddBinaryRoute,
-  ProblemsAddTwoNumbersRoute: ProblemsAddTwoNumbersRoute,
-  ProblemsBasicCalculatorIiRoute: ProblemsBasicCalculatorIiRoute,
-  ProblemsBrowserHistoryRoute: ProblemsBrowserHistoryRoute,
-  ProblemsContainerWaterRoute: ProblemsContainerWaterRoute,
-  ProblemsDecodeStringRoute: ProblemsDecodeStringRoute,
-  ProblemsFlattenMultilevelListRoute: ProblemsFlattenMultilevelListRoute,
-  ProblemsFruitIntoBasketsRoute: ProblemsFruitIntoBasketsRoute,
-  ProblemsLongestCommonPrefixRoute: ProblemsLongestCommonPrefixRoute,
-  ProblemsLruCacheRoute: ProblemsLruCacheRoute,
-  ProblemsMagicDictionaryRoute: ProblemsMagicDictionaryRoute,
-  ProblemsMergeSortedArrayRoute: ProblemsMergeSortedArrayRoute,
-  ProblemsOrderedStreamRoute: ProblemsOrderedStreamRoute,
-  ProblemsRandomizedSetRoute: ProblemsRandomizedSetRoute,
-  ProblemsRemoveDuplicatesIiRoute: ProblemsRemoveDuplicatesIiRoute,
-  ProblemsReverseIntegerRoute: ProblemsReverseIntegerRoute,
-  ProblemsRotateImageRoute: ProblemsRotateImageRoute,
-  ProblemsRottingOrangesRoute: ProblemsRottingOrangesRoute,
-  ProblemsShortestPathBinaryMatrixRoute: ProblemsShortestPathBinaryMatrixRoute,
-  ProblemsSingleElementSortedRoute: ProblemsSingleElementSortedRoute,
-  ProblemsSubarraySumKRoute: ProblemsSubarraySumKRoute,
-  ProblemsThreeSumRoute: ProblemsThreeSumRoute,
-  ProblemsTopKFrequentWordsRoute: ProblemsTopKFrequentWordsRoute,
-  ProblemsUndergroundSystemRoute: ProblemsUndergroundSystemRoute,
-  ProblemsValidateBstRoute: ProblemsValidateBstRoute,
-}
-
-const ProblemsRouteWithChildren = ProblemsRoute._addFileChildren(
-  ProblemsRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
   GalleryRoute: GalleryRoute,
   ProblemListRoute: ProblemListRoute,
-  ProblemsRoute: ProblemsRouteWithChildren,
+  ProblemsFizzBuzzRoute: ProblemsFizzBuzzRoute,
   VizIdRoute: VizIdRoute,
 }
 export const routeTree = rootRouteImport

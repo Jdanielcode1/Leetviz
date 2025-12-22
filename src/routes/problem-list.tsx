@@ -31,6 +31,17 @@ const problems: Problem[] = [
     solved: true,
   },
   {
+    id: 412,
+    title: 'Fizz Buzz',
+    difficulty: 'Easy',
+    category: 'Math',
+    tags: ['Math', 'String', 'Simulation'],
+    path: '/problems/fizz-buzz',
+    description: 'Return FizzBuzz array for numbers 1 to n.',
+    acceptance: 72.4,
+    solved: false,
+  },
+  {
     id: 7,
     title: 'Reverse Integer',
     difficulty: 'Medium',

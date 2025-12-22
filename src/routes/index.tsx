@@ -16,6 +16,15 @@ interface Problem {
 
 const problems: Problem[] = [
   {
+    id: 412,
+    title: 'Fizz Buzz',
+    difficulty: 'Easy',
+    category: 'Math',
+    tags: ['Math', 'String', 'Simulation'],
+    path: '/problems/fizz-buzz',
+    description: 'Return FizzBuzz array where multiples of 3 are Fizz, 5 are Buzz, both are FizzBuzz.',
+  },
+  {
     id: 394,
     title: 'Decode String',
     difficulty: 'Medium',
