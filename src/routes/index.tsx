@@ -422,8 +422,20 @@ function HomePage() {
             </Link>
 
             <Link
-              to="/gallery"
+              to="/problem-list"
               className="group relative px-8 py-4 rounded-2xl bg-slate-800 border border-slate-700 text-white font-display font-semibold text-lg hover:bg-slate-700 transition-all duration-300 hover:scale-105"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Browse All Problems
+              </span>
+            </Link>
+
+            <Link
+              to="/gallery"
+              className="group relative px-8 py-4 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-300 font-display font-semibold text-lg hover:bg-slate-800 hover:border-slate-700 transition-all duration-300 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-3">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,101 +451,100 @@ function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
       </div>
 
-      {/* Problems Section */}
+      {/* Problems Preview Section */}
       <div className="relative grid-pattern">
         <div className="max-w-6xl mx-auto px-6 py-16">
           {/* Section Header */}
-          <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="font-display text-3xl font-bold text-slate-100">
                 Problem Collection
               </h2>
               <p className="text-slate-500 mt-1 font-display">
-                Select a problem to explore its visualization
+                {problems.length} algorithm visualizations ready to explore
               </p>
             </div>
-            
-            {/* Filter pills - decorative for now */}
-            <div className="hidden md:flex gap-2">
-              <span className="px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700 text-slate-400 text-sm font-display">
-                All Topics
-              </span>
+
+            <Link
+              to="/problem-list"
+              className="px-6 py-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-display font-medium hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-all flex items-center gap-2"
+            >
+              View All Problems
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <span className="text-emerald-400 font-bold text-xl">{problems.filter(p => p.difficulty === 'Easy').length}</span>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-sm font-display">Easy</div>
+                  <div className="text-emerald-400 font-display font-semibold">Problems</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <span className="text-amber-400 font-bold text-xl">{problems.filter(p => p.difficulty === 'Medium').length}</span>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-sm font-display">Medium</div>
+                  <div className="text-amber-400 font-display font-semibold">Problems</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center">
+                  <span className="text-rose-400 font-bold text-xl">{problems.filter(p => p.difficulty === 'Hard').length}</span>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-sm font-display">Hard</div>
+                  <div className="text-rose-400 font-display font-semibold">Problems</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Problems Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {problems.map((problem) => (
-          <Link
-                key={problem.id}
-                to={problem.path}
-                className="group card-shine"
-              >
-                <div className="h-full bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-800 p-6 transition-all duration-300 group-hover:border-slate-700 group-hover:bg-slate-900 group-hover:shadow-xl group-hover:shadow-amber-500/5 group-hover:-translate-y-1">
-                  {/* Problem number & difficulty */}
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-code text-slate-500 text-sm">
-                      #{problem.id}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${difficultyColors[problem.difficulty]}`}>
-                      {problem.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-display text-xl font-semibold text-slate-100 group-hover:text-amber-300 transition-colors mb-2">
+          {/* Featured Problems Preview */}
+          <div className="bg-slate-900/50 rounded-2xl border border-slate-800 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+              <span className="text-slate-400 font-display font-medium">Featured Problems</span>
+              <span className="text-slate-600 text-sm font-mono">{problems.length} total</span>
+            </div>
+            <div className="divide-y divide-slate-800/50">
+              {problems.slice(0, 5).map((problem) => (
+                <Link
+                  key={problem.id}
+                  to={problem.path}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-cyan-500/5 transition-colors group"
+                >
+                  <span className="text-slate-500 font-mono text-sm w-12">{problem.id}.</span>
+                  <span className="flex-1 text-slate-200 font-display group-hover:text-cyan-300 transition-colors">
                     {problem.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-slate-500 text-sm mb-4 line-clamp-2">
-                    {problem.description}
-                  </p>
-
-                  {/* Category badge */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium font-display">
-                      {problem.category}
-                    </span>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    {problem.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 rounded bg-slate-800/50 text-slate-500 text-xs font-code"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Hover indicator */}
-                  <div className="mt-6 flex items-center text-amber-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>Explore visualization</span>
-                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            ))}
-
-            {/* Coming Soon Card */}
-            <div className="h-full bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 p-6 flex flex-col items-center justify-center text-center min-h-[280px]">
-              <div className="w-16 h-16 rounded-2xl bg-slate-800/50 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+                  </span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${difficultyColors[problem.difficulty]}`}>
+                    {problem.difficulty}
+                  </span>
+                  <svg className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ))}
             </div>
-              <h3 className="font-display text-lg font-semibold text-slate-600 mb-1">
-                More Coming Soon
-              </h3>
-              <p className="text-slate-700 text-sm">
-                New visualizations are being added regularly
-              </p>
-            </div>
+            <Link
+              to="/problem-list"
+              className="block px-6 py-4 bg-slate-800/30 text-center text-cyan-400 font-display font-medium hover:bg-slate-800/50 transition-colors"
+            >
+              Browse all {problems.length} problems →
+            </Link>
           </div>
         </div>
       </div>
