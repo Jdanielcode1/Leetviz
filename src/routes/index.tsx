@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -9,12 +9,12 @@ interface Problem {
   title: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
   category: string
-  tags: string[]
+  tags: Array<string>
   path: string
   description: string
 }
 
-const problems: Problem[] = [
+const problems: Array<Problem> = [
   {
     id: 412,
     title: 'Fizz Buzz',

@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/top-k-frequent-words')({
   component: TopKFrequentWords,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'def topKFrequent(words: List[str], k: int) -> List[str]:' },
   { num: 2, code: '    # Step 1: Count frequency of each word' },
   { num: 3, code: '    freq = {}' },
@@ -39,6 +41,26 @@ const PROBLEM_DESCRIPTION = `Given an array of strings words and an integer k, r
 
 Return the answer sorted by the frequency from highest to lowest. Sort the words with the same frequency by their lexicographical order.`
 
+const EXAMPLES: Array<Example> = [
+  {
+    input: 'words = ["i", "love", "leetcode", "i", "love", "coding"], k = 2',
+    output: '["i", "love"]',
+    explanation: '"i" and "love" are the two most frequent words. Note that "i" comes before "love" due to lexicographical order.',
+  },
+  {
+    input: 'words = ["the", "day", "is", "sunny", "the", "the", "the", "sunny", "is", "is"], k = 4',
+    output: '["the", "is", "sunny", "day"]',
+    explanation: '"the", "is", "sunny" and "day" are the four most frequent words, with frequencies 4, 3, 2 and 1 respectively.',
+  },
+]
+
+const CONSTRAINTS = [
+  '1 <= words.length <= 500',
+  '1 <= words[i].length <= 10',
+  'words[i] consists of lowercase English letters.',
+  'k is in the range [1, The number of unique words[i]]',
+]
+
 interface WordCount {
   word: string
   count: number
@@ -50,59 +72,61 @@ interface Step {
   insight: string
   phase: 'count' | 'convert' | 'sort' | 'extract' | 'done'
   freq: Map<string, number>
-  wordCounts: WordCount[]
-  sortedCounts: WordCount[]
-  result: string[]
+  wordCounts: Array<WordCount>
+  sortedCounts: Array<WordCount>
+  result: Array<string>
   highlightWord: string | null
   highlightIndex: number | null
   currentK: number
 }
 
-interface TestCase {
-  id: number
-  name: string
-  words: string[]
+interface TestCaseData {
+  words: Array<string>
   k: number
-  expected: string[]
-  explanation: string[]
+  expected: Array<string>
+  explanation: Array<string>
 }
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
   {
     id: 1,
-    name: 'Example 1: Two most frequent',
-    words: ['i', 'love', 'leetcode', 'i', 'love', 'coding'],
-    k: 2,
-    expected: ['i', 'love'],
-    explanation: [
-      'words = ["i", "love", "leetcode", "i", "love", "coding"], k = 2',
-      'Count frequencies: i=2, love=2, leetcode=1, coding=1',
-      'Sort by (-count, word): (-2, "i"), (-2, "love"), (-1, "coding"), (-1, "leetcode")',
-      '"i" and "love" both have count 2, but "i" < "love" alphabetically',
-      'Return top 2: ["i", "love"]',
-    ],
+    label: 'Example 1: Two most frequent',
+    data: {
+      words: ['i', 'love', 'leetcode', 'i', 'love', 'coding'],
+      k: 2,
+      expected: ['i', 'love'],
+      explanation: [
+        'words = ["i", "love", "leetcode", "i", "love", "coding"], k = 2',
+        'Count frequencies: i=2, love=2, leetcode=1, coding=1',
+        'Sort by (-count, word): (-2, "i"), (-2, "love"), (-1, "coding"), (-1, "leetcode")',
+        '"i" and "love" both have count 2, but "i" < "love" alphabetically',
+        'Return top 2: ["i", "love"]',
+      ],
+    },
   },
   {
     id: 2,
-    name: 'Example 2: Four most frequent',
-    words: ['the', 'day', 'is', 'sunny', 'the', 'the', 'the', 'sunny', 'is', 'is'],
-    k: 4,
-    expected: ['the', 'is', 'sunny', 'day'],
-    explanation: [
-      'words = ["the", "day", "is", "sunny", "the", "the", "the", "sunny", "is", "is"], k = 4',
-      'Count frequencies: the=4, is=3, sunny=2, day=1',
-      'Sort by (-count, word): (-4, "the"), (-3, "is"), (-2, "sunny"), (-1, "day")',
-      'Return top 4: ["the", "is", "sunny", "day"]',
-    ],
+    label: 'Example 2: Four most frequent',
+    data: {
+      words: ['the', 'day', 'is', 'sunny', 'the', 'the', 'the', 'sunny', 'is', 'is'],
+      k: 4,
+      expected: ['the', 'is', 'sunny', 'day'],
+      explanation: [
+        'words = ["the", "day", "is", "sunny", "the", "the", "the", "sunny", "is", "is"], k = 4',
+        'Count frequencies: the=4, is=3, sunny=2, day=1',
+        'Sort by (-count, word): (-4, "the"), (-3, "is"), (-2, "sunny"), (-1, "day")',
+        'Return top 4: ["the", "is", "sunny", "day"]',
+      ],
+    },
   },
 ]
 
-function generateSteps(words: string[], k: number): Step[] {
-  const steps: Step[] = []
+function generateSteps(words: Array<string>, k: number): Array<Step> {
+  const steps: Array<Step> = []
   const freq = new Map<string, number>()
-  let wordCounts: WordCount[] = []
-  let sortedCounts: WordCount[] = []
-  const result: string[] = []
+  const wordCounts: Array<WordCount> = []
+  let sortedCounts: Array<WordCount> = []
+  const result: Array<string> = []
 
   // Clone helpers
   const cloneFreq = () => new Map(freq)
@@ -358,12 +382,11 @@ function generateSteps(words: string[], k: number): Step[] {
 function TopKFrequentWords() {
   const [selectedTestCase, setSelectedTestCase] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
-  const [showTestCase, setShowTestCase] = useState(false)
 
   const testCase = TEST_CASES[selectedTestCase]
   const steps = useMemo(
-    () => generateSteps(testCase.words, testCase.k),
-    [testCase.words, testCase.k]
+    () => generateSteps(testCase.data.words, testCase.data.k),
+    [testCase.data.words, testCase.data.k]
   )
   const step = steps[currentStep]
 
@@ -374,395 +397,216 @@ function TopKFrequentWords() {
 
   const freqArray = Array.from(step.freq.entries())
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .font-display { font-family: 'Outfit', sans-serif; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
-        .code-highlight {
-          background: linear-gradient(90deg, rgba(251, 146, 60, 0.15) 0%, transparent 100%);
-          border-left: 2px solid #fb923c;
-        }
-
         .glow-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
         .glow-orange { box-shadow: 0 0 15px rgba(251, 146, 60, 0.4); }
         .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
         .glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
+      {/* Phase indicator */}
+      <div className={`rounded-xl border p-4 transition-all duration-300 ${
+        step.phase === 'count'
+          ? 'bg-cyan-500/10 border-cyan-500/30'
+          : step.phase === 'convert'
+          ? 'bg-orange-500/10 border-orange-500/30'
+          : step.phase === 'sort'
+          ? 'bg-purple-500/10 border-purple-500/30'
+          : step.phase === 'extract'
+          ? 'bg-emerald-500/10 border-emerald-500/30'
+          : 'bg-slate-800/50 border-slate-700'
+      }`}>
+        <div className="text-sm font-mono mb-2 text-slate-400">PHASE</div>
+        <div className="font-mono text-lg">
+          {step.phase === 'count' && <span className="text-cyan-400">1. Count Frequencies</span>}
+          {step.phase === 'convert' && <span className="text-orange-400">2. Convert to List</span>}
+          {step.phase === 'sort' && <span className="text-purple-400">3. Sort by (-count, word)</span>}
+          {step.phase === 'extract' && <span className="text-emerald-400">4. Extract Top K</span>}
+          {step.phase === 'done' && <span className="text-emerald-400">Complete!</span>}
+        </div>
+        {step.highlightWord && (
+          <div className="mt-2 text-slate-300 font-mono">
+            Current word: <span className="text-cyan-300">"{step.highlightWord}"</span>
+          </div>
+        )}
+      </div>
 
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#692</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
+      {/* Frequency Map */}
+      <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-cyan-400 font-mono text-sm">Frequency Map (freq)</span>
+          <span className="text-slate-500 font-mono text-xs">{freqArray.length} unique words</span>
+        </div>
+        <div className="p-4">
+          {freqArray.length === 0 ? (
+            <div className="text-center text-slate-600 font-mono py-2">Empty</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {freqArray.map(([word, count]) => (
+                <div
+                  key={word}
+                  className={`px-3 py-2 rounded-lg font-mono text-sm transition-all duration-300 ${
+                    step.highlightWord === word
+                      ? 'bg-cyan-500/20 border border-cyan-500/50 glow-cyan'
+                      : 'bg-slate-800/50 border border-slate-700'
+                  }`}
+                >
+                  <span className="text-slate-400">"{word}"</span>
+                  <span className="text-slate-600 mx-1">:</span>
+                  <span className={step.highlightWord === word ? 'text-cyan-300' : 'text-emerald-400'}>
+                    {count}
                   </span>
                 </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Top K Frequent Words
-                </h1>
-                <div className="flex gap-2">
-                  {['Hash Table', 'Sorting', 'Heap'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sorted List */}
+      {step.sortedCounts.length > 0 && (
+        <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
+          <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+            <span className="text-purple-400 font-mono text-sm">Sorted by (-count, word)</span>
+            <span className="text-slate-500 font-mono text-xs">k = {step.currentK}</span>
+          </div>
+          <div className="p-4">
+            <div className="space-y-2">
+              {step.sortedCounts.map((wc, idx) => (
+                <div
+                  key={wc.word}
+                  className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
+                    step.highlightIndex === idx
+                      ? 'bg-emerald-500/20 border border-emerald-500/50 glow-green'
+                      : idx < step.currentK
+                      ? 'bg-purple-500/10 border border-purple-500/30'
+                      : 'bg-slate-800/30 border border-slate-700/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`font-mono text-sm ${
+                      idx < step.currentK ? 'text-purple-400' : 'text-slate-500'
+                    }`}>
+                      [{idx}]
                     </span>
-                  ))}
+                    <span className={`font-mono ${
+                      step.highlightIndex === idx ? 'text-emerald-300' : 'text-slate-200'
+                    }`}>
+                      "{wc.word}"
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 font-mono text-sm">count:</span>
+                    <span className={`font-mono font-semibold ${
+                      step.highlightIndex === idx ? 'text-emerald-400' : 'text-cyan-400'
+                    }`}>
+                      {wc.count}
+                    </span>
+                    <span className="text-slate-600 font-mono text-xs">
+                      key: ({-wc.count}, "{wc.word}")
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Problem Description */}
-          <div className="mb-8 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-            <p className="text-slate-400 font-mono text-sm whitespace-pre-line">{PROBLEM_DESCRIPTION}</p>
-          </div>
-
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc, idx) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(idx)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase === idx
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    {tc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Show Test Case Toggle */}
-          <div className="mb-6">
-            <button
-              onClick={() => setShowTestCase(!showTestCase)}
-              className="flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors font-mono text-sm"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showTestCase ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+      {/* Result */}
+      {step.result.length > 0 && (
+        <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-4">
+          <div className="text-sm font-mono mb-2 text-slate-400">RESULT</div>
+          <div className="flex gap-2 flex-wrap">
+            {step.result.map((word, idx) => (
+              <div
+                key={idx}
+                className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/50 font-mono text-emerald-300 glow-green"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              {showTestCase ? 'Hide' : 'Show'} Test Case Details
-            </button>
-
-            {showTestCase && (
-              <div className="mt-4 bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="p-4 space-y-4">
-                  <div>
-                    <div className="text-cyan-400 font-mono text-sm mb-2">Input</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      <pre className="text-slate-300 font-mono text-xs">words = {JSON.stringify(testCase.words)}</pre>
-                      <pre className="text-slate-300 font-mono text-xs">k = {testCase.k}</pre>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-emerald-400 font-mono text-sm mb-2">Output</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      <pre className="text-slate-300 font-mono text-xs">{JSON.stringify(testCase.expected)}</pre>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-orange-400 font-mono text-sm mb-2">Explanation</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      {testCase.explanation.map((line, idx) => (
-                        <pre key={idx} className="text-slate-400 font-mono text-xs">{line}</pre>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                "{word}"
               </div>
-            )}
+            ))}
           </div>
+        </div>
+      )}
+    </>
+  )
 
-          {/* Controls */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setCurrentStep(0)}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              Reset
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-              disabled={currentStep === steps.length - 1}
-              className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
-            >
-              Next
-            </button>
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStep + 1} / {steps.length}
-            </span>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">1. Count Frequencies</h4>
+          <p className="text-slate-400">
+            Use a hashmap to count each word's occurrences.
+            O(n) time to iterate through all words.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-purple-400 font-mono mb-1">2. Sort with Custom Key</h4>
+          <p className="text-slate-400">
+            Sort by (-count, word). Negative count gives descending order.
+            String comparison handles alphabetical tiebreaker.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-emerald-400 font-mono mb-1">3. Extract Top K</h4>
+          <p className="text-slate-400">
+            Take first k elements from sorted list.
+            This gives us the k most frequent words.
+          </p>
+        </div>
+        <div className="flex gap-3 mt-2">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n log n)</span>
+            <p className="text-slate-500 text-[10px] mt-1">
+              Counting is O(n), sorting is O(m log m) where m = unique words
+            </p>
           </div>
-
-          {/* Progress Bar */}
-          <div className="mb-8 h-1 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-            />
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Code Panel */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                </div>
-                <span className="text-slate-500 font-mono text-xs">top_k_frequent.py</span>
-              </div>
-              <div className="p-4 font-mono text-sm overflow-x-auto max-h-[600px] overflow-y-auto">
-                {CODE_LINES.map((line) => (
-                  <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      step.lineNumber === line.num ? 'code-highlight' : ''
-                    }`}
-                  >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none flex-shrink-0">
-                      {line.num}
-                    </span>
-                    <code className={`whitespace-pre ${step.lineNumber === line.num ? 'text-cyan-300' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </code>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visualization Panel */}
-            <div className="space-y-6">
-              {/* Phase indicator */}
-              <div className={`rounded-xl border p-4 transition-all duration-300 ${
-                step.phase === 'count'
-                  ? 'bg-cyan-500/10 border-cyan-500/30'
-                  : step.phase === 'convert'
-                  ? 'bg-orange-500/10 border-orange-500/30'
-                  : step.phase === 'sort'
-                  ? 'bg-purple-500/10 border-purple-500/30'
-                  : step.phase === 'extract'
-                  ? 'bg-emerald-500/10 border-emerald-500/30'
-                  : 'bg-slate-800/50 border-slate-700'
-              }`}>
-                <div className="text-sm font-mono mb-2 text-slate-400">PHASE</div>
-                <div className="font-mono text-lg">
-                  {step.phase === 'count' && <span className="text-cyan-400">1. Count Frequencies</span>}
-                  {step.phase === 'convert' && <span className="text-orange-400">2. Convert to List</span>}
-                  {step.phase === 'sort' && <span className="text-purple-400">3. Sort by (-count, word)</span>}
-                  {step.phase === 'extract' && <span className="text-emerald-400">4. Extract Top K</span>}
-                  {step.phase === 'done' && <span className="text-emerald-400">Complete!</span>}
-                </div>
-                {step.highlightWord && (
-                  <div className="mt-2 text-slate-300 font-mono">
-                    Current word: <span className="text-cyan-300">"{step.highlightWord}"</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Frequency Map */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-cyan-400 font-mono text-sm">Frequency Map (freq)</span>
-                  <span className="text-slate-500 font-mono text-xs">{freqArray.length} unique words</span>
-                </div>
-                <div className="p-4">
-                  {freqArray.length === 0 ? (
-                    <div className="text-center text-slate-600 font-mono py-2">Empty</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {freqArray.map(([word, count]) => (
-                        <div
-                          key={word}
-                          className={`px-3 py-2 rounded-lg font-mono text-sm transition-all duration-300 ${
-                            step.highlightWord === word
-                              ? 'bg-cyan-500/20 border border-cyan-500/50 glow-cyan'
-                              : 'bg-slate-800/50 border border-slate-700'
-                          }`}
-                        >
-                          <span className="text-slate-400">"{word}"</span>
-                          <span className="text-slate-600 mx-1">:</span>
-                          <span className={step.highlightWord === word ? 'text-cyan-300' : 'text-emerald-400'}>
-                            {count}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Sorted List */}
-              {step.sortedCounts.length > 0 && (
-                <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                  <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                    <span className="text-purple-400 font-mono text-sm">Sorted by (-count, word)</span>
-                    <span className="text-slate-500 font-mono text-xs">k = {step.currentK}</span>
-                  </div>
-                  <div className="p-4">
-                    <div className="space-y-2">
-                      {step.sortedCounts.map((wc, idx) => (
-                        <div
-                          key={wc.word}
-                          className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                            step.highlightIndex === idx
-                              ? 'bg-emerald-500/20 border border-emerald-500/50 glow-green'
-                              : idx < step.currentK
-                              ? 'bg-purple-500/10 border border-purple-500/30'
-                              : 'bg-slate-800/30 border border-slate-700/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className={`font-mono text-sm ${
-                              idx < step.currentK ? 'text-purple-400' : 'text-slate-500'
-                            }`}>
-                              [{idx}]
-                            </span>
-                            <span className={`font-mono ${
-                              step.highlightIndex === idx ? 'text-emerald-300' : 'text-slate-200'
-                            }`}>
-                              "{wc.word}"
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-slate-500 font-mono text-sm">count:</span>
-                            <span className={`font-mono font-semibold ${
-                              step.highlightIndex === idx ? 'text-emerald-400' : 'text-cyan-400'
-                            }`}>
-                              {wc.count}
-                            </span>
-                            <span className="text-slate-600 font-mono text-xs">
-                              key: ({-wc.count}, "{wc.word}")
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Result */}
-              {step.result.length > 0 && (
-                <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-4">
-                  <div className="text-sm font-mono mb-2 text-slate-400">RESULT</div>
-                  <div className="flex gap-2 flex-wrap">
-                    {step.result.map((word, idx) => (
-                      <div
-                        key={idx}
-                        className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/50 font-mono text-emerald-300 glow-green"
-                      >
-                        "{word}"
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Insight Panel */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                  <span className="text-slate-300 font-mono text-sm">CURRENT STEP</span>
-                </div>
-                <div className="p-6">
-                  <p className="text-slate-200 font-display text-lg mb-3">{step.description}</p>
-                  <p className="text-slate-400 font-display">{step.insight}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Algorithm Explanation */}
-          <div className="mt-8 bg-slate-900/50 rounded-xl border border-slate-700 p-6">
-            <h3 className="text-slate-200 font-display font-semibold text-lg mb-4">Algorithm Insight</h3>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <h4 className="text-cyan-400 font-mono mb-2">1. Count Frequencies</h4>
-                <p className="text-slate-400">
-                  Use a hashmap to count each word's occurrences.
-                  O(n) time to iterate through all words.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-purple-400 font-mono mb-2">2. Sort with Custom Key</h4>
-                <p className="text-slate-400">
-                  Sort by (-count, word). Negative count gives descending order.
-                  String comparison handles alphabetical tiebreaker.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-emerald-400 font-mono mb-2">3. Extract Top K</h4>
-                <p className="text-slate-400">
-                  Take first k elements from sorted list.
-                  This gives us the k most frequent words.
-                </p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6 text-sm mt-4">
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-purple-400 font-mono mb-2">Time Complexity: O(n log n)</h4>
-                <p className="text-slate-400">
-                  Counting is O(n), sorting is O(m log m) where m = unique words.
-                  In worst case, m = n, so O(n log n).
-                </p>
-              </div>
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-pink-400 font-mono mb-2">Space Complexity: O(n)</h4>
-                <p className="text-slate-400">
-                  Hashmap stores up to n unique words.
-                  Sorted list also stores n word-count pairs.
-                </p>
-              </div>
-            </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(n)</span>
+            <p className="text-slate-500 text-[10px] mt-1">
+              Hashmap + sorted list store up to n items
+            </p>
           </div>
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '692',
+        title: 'Top K Frequent Words',
+        difficulty: 'medium',
+        tags: ['Hash Table', 'String', 'Heap'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="top_k_frequent.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

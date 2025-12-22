@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/ordered-stream')({
   component: OrderedStreamVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class OrderedStream:' },
   { num: 2, code: '' },
   { num: 3, code: '    def __init__(self, n: int):' },
@@ -23,42 +25,68 @@ const CODE_LINES = [
   { num: 15, code: '        return output' },
 ]
 
+const PROBLEM_DESCRIPTION = `There is a stream of n (idKey, value) pairs arriving in an arbitrary order, where idKey is an integer between 1 and n and value is a string. No two pairs have the same id.
+
+Design a stream that returns the values in increasing order of their IDs by returning a chunk (list) of values after each insertion. The concatenation of all the chunks should result in a list of the sorted values.
+
+Implement the OrderedStream class:
+
+- OrderedStream(int n) Constructs the stream to take n values.
+- String[] insert(int idKey, string value) Inserts the pair (idKey, value) into the stream, then returns the largest possible chunk of currently inserted values that appear next in the order.`
+
+const EXAMPLES: Array<Example> = [
+  {
+    input: 'n = 5, operations = [insert(3, "ccccc"), insert(1, "aaaaa"), insert(2, "bbbbb"), insert(5, "eeeee"), insert(4, "ddddd")]',
+    output: '[[], ["aaaaa"], ["bbbbb", "ccccc"], [], ["ddddd", "eeeee"]]',
+    explanation: 'OrderedStream os = new OrderedStream(5); os.insert(3, "ccccc") returns []; os.insert(1, "aaaaa") returns ["aaaaa"]; os.insert(2, "bbbbb") returns ["bbbbb", "ccccc"]; os.insert(5, "eeeee") returns []; os.insert(4, "ddddd") returns ["ddddd", "eeeee"];',
+  },
+]
+
+const CONSTRAINTS = [
+  '1 <= n <= 1000',
+  '1 <= id <= n',
+  'value.length == 5',
+  'value consists only of lowercase letters',
+  'Each call to insert will have a unique id',
+  'Exactly n calls will be made to insert',
+]
+
 interface Operation {
   type: 'init' | 'insert'
   args: number | [number, string]
 }
 
-interface TestCase {
-  id: number
-  name: string
+interface TestCaseData {
   n: number
-  operations: Operation[]
-  expectedOutputs: (null | string[])[]
-  explanation: string[]
+  operations: Array<Operation>
+  expectedOutputs: Array<null | Array<string>>
+  explanation: Array<string>
 }
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
   {
     id: 1,
-    name: 'Main Example',
-    n: 5,
-    operations: [
-      { type: 'init', args: 5 },
-      { type: 'insert', args: [3, 'ccccc'] },
-      { type: 'insert', args: [1, 'aaaaa'] },
-      { type: 'insert', args: [2, 'bbbbb'] },
-      { type: 'insert', args: [5, 'eeeee'] },
-      { type: 'insert', args: [4, 'ddddd'] },
-    ],
-    expectedOutputs: [null, [], ['aaaaa'], ['bbbbb', 'ccccc'], [], ['ddddd', 'eeeee']],
-    explanation: [
-      'OrderedStream(5) - Initialize stream with 5 slots',
-      'insert(3, "ccccc") - Slot 3 filled, but pointer at 1 (empty), return []',
-      'insert(1, "aaaaa") - Slot 1 filled, pointer moves 1→2, return ["aaaaa"]',
-      'insert(2, "bbbbb") - Slot 2 filled, consecutive with 3, pointer 2→4, return ["bbbbb", "ccccc"]',
-      'insert(5, "eeeee") - Slot 5 filled, but slot 4 empty, return []',
-      'insert(4, "ddddd") - Slot 4 filled, consecutive with 5, pointer 4→6, return ["ddddd", "eeeee"]',
-    ],
+    label: 'Main Example',
+    data: {
+      n: 5,
+      operations: [
+        { type: 'init', args: 5 },
+        { type: 'insert', args: [3, 'ccccc'] },
+        { type: 'insert', args: [1, 'aaaaa'] },
+        { type: 'insert', args: [2, 'bbbbb'] },
+        { type: 'insert', args: [5, 'eeeee'] },
+        { type: 'insert', args: [4, 'ddddd'] },
+      ],
+      expectedOutputs: [null, [], ['aaaaa'], ['bbbbb', 'ccccc'], [], ['ddddd', 'eeeee']],
+      explanation: [
+        'OrderedStream(5) - Initialize stream with 5 slots',
+        'insert(3, "ccccc") - Slot 3 filled, but pointer at 1 (empty), return []',
+        'insert(1, "aaaaa") - Slot 1 filled, pointer moves 1→2, return ["aaaaa"]',
+        'insert(2, "bbbbb") - Slot 2 filled, consecutive with 3, pointer 2→4, return ["bbbbb", "ccccc"]',
+        'insert(5, "eeeee") - Slot 5 filled, but slot 4 empty, return []',
+        'insert(4, "ddddd") - Slot 4 filled, consecutive with 5, pointer 4→6, return ["ddddd", "eeeee"]',
+      ],
+    },
   },
 ]
 
@@ -70,22 +98,22 @@ interface Step {
   pointer: number
   n: number
   currentInsert: { id: number; value: string } | null
-  output: string[]
-  allOutputs: (string[] | null)[]
-  concatenated: string[]
+  output: Array<string>
+  allOutputs: Array<Array<string> | null>
+  concatenated: Array<string>
   phase: 'init' | 'insert-value' | 'check-pointer' | 'collect' | 'advance-pointer' | 'return' | 'complete'
   highlightSlot: number | null
   highlightOutput: boolean
-  slotsReturning: number[]
+  slotsReturning: Array<number>
   operationIndex: number
 }
 
-function generateSteps(testCase: TestCase): Step[] {
-  const steps: Step[] = []
+function generateSteps(testCase: TestCaseData): Array<Step> {
+  const steps: Array<Step> = []
   const stream = new Map<number, string>()
   let pointer = 1
-  const allOutputs: (string[] | null)[] = []
-  const concatenated: string[] = []
+  const allOutputs: Array<Array<string> | null> = []
+  const concatenated: Array<string> = []
 
   // Initial state - class definition
   steps.push({
@@ -169,8 +197,8 @@ function generateSteps(testCase: TestCase): Step[] {
     if (op.type !== 'insert') continue
 
     const [idKey, value] = op.args as [number, string]
-    let output: string[] = []
-    const slotsReturning: number[] = []
+    const output: Array<string> = []
+    const slotsReturning: Array<number> = []
 
     // Start insert method
     steps.push({
@@ -401,50 +429,25 @@ function getValueColor(value: string) {
 function OrderedStreamVisualization() {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedTestCase, setSelectedTestCase] = useState(0)
-  const [showTestCase, setShowTestCase] = useState(false)
 
   const testCase = TEST_CASES[selectedTestCase]
-  const steps = useMemo(() => generateSteps(testCase), [selectedTestCase])
+  const steps = useMemo(() => generateSteps(testCase.data), [testCase.data])
   const step = steps[currentStep]
 
-  const handlePrevious = () => setCurrentStep((s) => Math.max(0, s - 1))
-  const handleNext = () => setCurrentStep((s) => Math.min(steps.length - 1, s + 1))
-  const handleReset = () => setCurrentStep(0)
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
+  }
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100 font-mono">
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .font-code { font-family: 'IBM Plex Mono', monospace; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
-        .glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
-        .glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.4); }
-        .glow-green { box-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
-        .glow-purple { box-shadow: 0 0 20px rgba(192, 132, 252, 0.4); }
-
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
           50% { box-shadow: 0 0 25px rgba(34, 211, 238, 0.6); }
         }
         .animate-pulse-glow {
           animation: pulse-glow 1s ease-in-out infinite;
-        }
-
-        @keyframes slide-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
         }
 
         @keyframes bounce-arrow {
@@ -454,319 +457,205 @@ function OrderedStreamVisualization() {
         .animate-bounce-arrow {
           animation: bounce-arrow 0.5s ease-in-out infinite;
         }
+
+        .glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
+        .glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.4); }
+        .glow-green { box-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#1656</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    EASY
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Design an Ordered Stream
-                </h1>
-                <div className="flex gap-2">
-                  {['Array', 'Hash Table', 'Design'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        {/* Test Case Selector */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <span className="text-slate-400 text-sm font-display">Test Case:</span>
-            <div className="flex gap-2">
-              {TEST_CASES.map((tc, i) => (
-                <button
-                  key={tc.id}
-                  onClick={() => {
-                    setSelectedTestCase(i)
-                    setCurrentStep(0)
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-display transition-all ${
-                    selectedTestCase === i
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
-                      : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  {tc.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowTestCase(!showTestCase)}
-              className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showTestCase ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Show Test Case Details
-            </button>
-          </div>
-
-          {showTestCase && (
-            <div className="mt-3 p-4 bg-slate-900/70 rounded-lg border border-slate-700 animate-slide-in">
-              <div className="space-y-2 text-sm font-code">
-                {testCase.explanation.map((exp, i) => (
-                  <div key={i} className="flex gap-3">
-                    <span className="text-slate-500">{i}.</span>
-                    <span className="text-slate-300">{exp}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* Stream Visualization */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Stream (HashMap)</span>
         </div>
+        <div className="p-4">
+          <div className="flex gap-2 justify-center mb-2">
+            {Array.from({ length: step.n }, (_, i) => i + 1).map((slot) => {
+              const value = step.stream.get(slot)
+              const isEmpty = !value
+              const isHighlighted = step.highlightSlot === slot
+              const isReturning = step.slotsReturning.includes(slot)
+              const isPointer = slot === step.pointer
+              const colors = value ? getValueColor(value) : null
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50">
-              <span className="text-slate-400 text-sm font-display">Python Code (Bloomberg Variation)</span>
-            </div>
-            <div className="p-4 font-code text-sm overflow-auto max-h-[500px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
-                return (
+              let borderClass = 'border-slate-600 border-dashed'
+              let bgClass = 'bg-slate-800/30'
+              let glowClass = ''
+
+              if (value && colors) {
+                borderClass = `${colors.border} border-solid`
+                bgClass = colors.bg
+              }
+
+              if (isHighlighted && step.phase === 'insert-value') {
+                glowClass = 'glow-cyan animate-pulse-glow'
+              } else if (isReturning) {
+                glowClass = 'glow-green'
+                borderClass = 'border-emerald-400'
+              } else if (isPointer && step.phase === 'check-pointer') {
+                glowClass = 'glow-orange'
+              }
+
+              return (
+                <div key={slot} className="flex flex-col items-center">
                   <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      isActive ? 'bg-orange-500/20 border-l-2 border-orange-400 -ml-[2px]' : ''
-                    }`}
+                    className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center font-mono text-xs transition-all duration-300 ${borderClass} ${bgClass} ${glowClass}`}
                   >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none text-xs leading-6">{line.num}</span>
-                    <pre className={`leading-6 ${isActive ? 'text-cyan-300' : 'text-slate-300'}`}>{line.code || ' '}</pre>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Stream Visualization */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-4">Stream (HashMap)</div>
-
-              <div className="flex gap-2 justify-center mb-2">
-                {Array.from({ length: step.n }, (_, i) => i + 1).map((slot) => {
-                  const value = step.stream.get(slot)
-                  const isEmpty = !value
-                  const isHighlighted = step.highlightSlot === slot
-                  const isReturning = step.slotsReturning.includes(slot)
-                  const isPointer = slot === step.pointer
-                  const colors = value ? getValueColor(value) : null
-
-                  let borderClass = 'border-slate-600 border-dashed'
-                  let bgClass = 'bg-slate-800/30'
-                  let glowClass = ''
-
-                  if (value && colors) {
-                    borderClass = `${colors.border} border-solid`
-                    bgClass = colors.bg
-                  }
-
-                  if (isHighlighted && step.phase === 'insert-value') {
-                    glowClass = 'glow-cyan animate-pulse-glow'
-                  } else if (isReturning) {
-                    glowClass = 'glow-green'
-                    borderClass = 'border-emerald-400'
-                  } else if (isPointer && step.phase === 'check-pointer') {
-                    glowClass = 'glow-orange'
-                  }
-
-                  return (
-                    <div key={slot} className="flex flex-col items-center">
-                      <div
-                        className={`w-16 h-16 rounded-lg border-2 flex items-center justify-center font-code text-xs transition-all duration-300 ${borderClass} ${bgClass} ${glowClass}`}
-                      >
-                        {isEmpty ? (
-                          <span className="text-slate-600">—</span>
-                        ) : (
-                          <span className={colors?.text || 'text-slate-300'}>{value}</span>
-                        )}
-                      </div>
-                      <span className="text-xs text-slate-500 mt-1">{slot}</span>
-                      {isPointer && (
-                        <div className="flex flex-col items-center mt-1">
-                          <svg
-                            className={`w-4 h-4 text-orange-400 ${step.phase === 'advance-pointer' ? 'animate-bounce-arrow' : ''}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="text-[10px] text-orange-400">ptr</span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Current Operation */}
-            {step.currentInsert && (
-              <div className="bg-slate-900/70 rounded-xl border border-cyan-500/30 p-4 glow-cyan">
-                <div className="text-cyan-400 text-sm font-display mb-2">Current Operation</div>
-                <div className="font-code text-lg text-center">
-                  insert({step.currentInsert.id}, "{step.currentInsert.value}")
-                </div>
-              </div>
-            )}
-
-            {/* Variables */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-3">Variables</div>
-              <div className="grid grid-cols-2 gap-3">
-                <div
-                  className={`p-3 rounded-lg border ${step.phase === 'advance-pointer' ? 'bg-orange-500/20 border-orange-400 glow-orange' : 'bg-slate-800/50 border-slate-600'}`}
-                >
-                  <div className="text-xs text-slate-500 mb-1">pointer</div>
-                  <div className="font-code text-xl text-orange-300">{step.pointer}</div>
-                </div>
-                <div
-                  className={`p-3 rounded-lg border ${step.highlightOutput ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}
-                >
-                  <div className="text-xs text-slate-500 mb-1">output</div>
-                  <div className="font-code text-sm text-emerald-300">
-                    [{step.output.map((v) => `"${v}"`).join(', ')}]
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Output History */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-3">Output History</div>
-              <div className="space-y-2">
-                {step.allOutputs.map((output, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm font-code">
-                    <span className="text-slate-500 w-6">#{i}</span>
-                    {output === null ? (
-                      <span className="text-slate-500">null</span>
+                    {isEmpty ? (
+                      <span className="text-slate-600">—</span>
                     ) : (
-                      <span className={output.length > 0 ? 'text-emerald-300' : 'text-slate-400'}>
-                        [{output.map((v) => `"${v}"`).join(', ')}]
-                      </span>
+                      <span className={colors?.text || 'text-slate-300'}>{value}</span>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Concatenated Result */}
-            <div className="bg-slate-900/70 rounded-xl border border-purple-500/30 p-4">
-              <div className="text-purple-400 text-sm font-display mb-2">Concatenated Result</div>
-              <div className="font-code text-sm text-purple-300">
-                [{step.concatenated.map((v) => `"${v}"`).join(', ')}]
-              </div>
-              {step.phase === 'complete' && (
-                <div className="mt-2 text-xs text-slate-500">Values returned in sorted order!</div>
-              )}
-            </div>
-
-            {/* Step Info */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-cyan-300 font-display font-medium mb-2">{step.description}</div>
-              <div className="text-slate-400 text-sm">{step.insight}</div>
-            </div>
+                  <span className="text-xs text-slate-500 mt-1">{slot}</span>
+                  {isPointer && (
+                    <div className="flex flex-col items-center mt-1">
+                      <svg
+                        className={`w-4 h-4 text-orange-400 ${step.phase === 'advance-pointer' ? 'animate-bounce-arrow' : ''}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-[10px] text-orange-400">ptr</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
+      </div>
 
-        {/* Controls */}
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors"
-          >
-            Reset
-          </button>
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 0}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <span className="text-slate-500 text-sm font-code">
-            Step {currentStep + 1} / {steps.length}
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={currentStep === steps.length - 1}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-
-        {/* Algorithm Insight */}
-        <div className="mt-8 bg-slate-900/70 rounded-xl border border-slate-700 p-6">
-          <h3 className="text-lg font-display font-semibold text-slate-100 mb-4">Algorithm Insight</h3>
-          <div className="grid md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <h4 className="text-cyan-400 font-medium mb-2">Key Insight: Pointer Only Moves Forward</h4>
-              <p className="text-slate-400">
-                The pointer tracks the smallest ID we haven't returned yet. It only advances when we find consecutive
-                filled positions, never moves backward.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-emerald-400 font-medium mb-2">Bloomberg Variation: HashMap vs Array</h4>
-              <p className="text-slate-400">
-                Using a hashmap instead of an array means we don't need to know <code className="text-amber-300">n</code>{' '}
-                upfront. We just check if <code className="text-amber-300">pointer in stream</code> with O(1) lookup.
-              </p>
-            </div>
+      {/* Current Operation */}
+      {step.currentInsert && (
+        <div className="bg-slate-800/50 rounded-xl border border-cyan-500/30 p-4 glow-cyan">
+          <div className="text-cyan-400 text-sm font-mono mb-2">Current Operation</div>
+          <div className="font-mono text-lg text-center">
+            insert({step.currentInsert.id}, "{step.currentInsert.value}")
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-700 flex gap-6">
-            <div>
-              <span className="text-slate-500">Time:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(n) total</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Space:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(n)</span>
+        </div>
+      )}
+
+      {/* Variables */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Variables</span>
+        </div>
+        <div className="p-4 grid grid-cols-2 gap-3">
+          <div
+            className={`p-3 rounded-lg border ${step.phase === 'advance-pointer' ? 'bg-orange-500/20 border-orange-400 glow-orange' : 'bg-slate-800/50 border-slate-600'}`}
+          >
+            <div className="text-xs text-slate-500 mb-1">pointer</div>
+            <div className="font-mono text-xl text-orange-300">{step.pointer}</div>
+          </div>
+          <div
+            className={`p-3 rounded-lg border ${step.highlightOutput ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}
+          >
+            <div className="text-xs text-slate-500 mb-1">output</div>
+            <div className="font-mono text-sm text-emerald-300">
+              [{step.output.map((v) => `"${v}"`).join(', ')}]
             </div>
           </div>
         </div>
       </div>
+
+      {/* Output History */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Output History</span>
+        </div>
+        <div className="p-4 space-y-2">
+          {step.allOutputs.map((output, i) => (
+            <div key={i} className="flex items-center gap-3 text-sm font-mono">
+              <span className="text-slate-500 w-6">#{i}</span>
+              {output === null ? (
+                <span className="text-slate-500">null</span>
+              ) : (
+                <span className={output.length > 0 ? 'text-emerald-300' : 'text-slate-400'}>
+                  [{output.map((v) => `"${v}"`).join(', ')}]
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Concatenated Result */}
+      <div className="bg-slate-800/50 rounded-xl border border-purple-500/30 p-4">
+        <div className="text-purple-400 text-sm font-mono mb-2">Concatenated Result</div>
+        <div className="font-mono text-sm text-purple-300">
+          [{step.concatenated.map((v) => `"${v}"`).join(', ')}]
+        </div>
+        {step.phase === 'complete' && (
+          <div className="mt-2 text-xs text-slate-500">Values returned in sorted order!</div>
+        )}
+      </div>
+    </>
+  )
+
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">Key Insight: Pointer Only Moves Forward</h4>
+          <p className="text-slate-400">
+            The pointer tracks the smallest ID we haven't returned yet. It only advances when we find consecutive
+            filled positions, never moves backward.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-emerald-400 font-mono mb-1">Bloomberg Variation: HashMap vs Array</h4>
+          <p className="text-slate-400">
+            Using a hashmap instead of an array means we don't need to know <code className="text-amber-300">n</code>{' '}
+            upfront. We just check if <code className="text-amber-300">pointer in stream</code> with O(1) lookup.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n) total</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(n)</span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '1656',
+        title: 'Design an Ordered Stream',
+        difficulty: 'easy',
+        tags: ['Array', 'Hash Table', 'Design'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="ordered_stream.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

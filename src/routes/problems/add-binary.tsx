@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/add-binary')({
   component: AddBinaryVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def addBinary(self, a: str, b: str) -> str:' },
   { num: 3, code: '        carry = 0' },
@@ -27,42 +29,69 @@ const CODE_LINES = [
   { num: 19, code: '        return "".join(res[::-1])' },
 ]
 
-interface TestCase {
-  id: number
-  name: string
+const PROBLEM_DESCRIPTION = `Given two binary strings a and b, return their sum as a binary string.`
+
+const EXAMPLES: Array<Example> = [
+  {
+    input: 'a = "11", b = "1"',
+    output: '"100"',
+    explanation: 'In binary: 11 (3 in decimal) + 1 (1 in decimal) = 100 (4 in decimal)',
+  },
+  {
+    input: 'a = "1010", b = "1011"',
+    output: '"10101"',
+    explanation: 'In binary: 1010 (10 in decimal) + 1011 (11 in decimal) = 10101 (21 in decimal)',
+  },
+]
+
+const CONSTRAINTS = [
+  '1 <= a.length, b.length <= 10^4',
+  'a and b consist only of \'0\' or \'1\' characters',
+  'Each string does not contain leading zeros except for the zero itself',
+]
+
+interface TestCaseData {
   a: string
   b: string
   expected: string
 }
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
   {
     id: 1,
-    name: 'Simple',
-    a: '11',
-    b: '1',
-    expected: '100',
+    label: 'Simple',
+    data: {
+      a: '11',
+      b: '1',
+      expected: '100',
+    },
   },
   {
     id: 2,
-    name: 'Same Length',
-    a: '1010',
-    b: '1011',
-    expected: '10101',
+    label: 'Same Length',
+    data: {
+      a: '1010',
+      b: '1011',
+      expected: '10101',
+    },
   },
   {
     id: 3,
-    name: 'Carry Chain',
-    a: '1111',
-    b: '1111',
-    expected: '11110',
+    label: 'Carry Chain',
+    data: {
+      a: '1111',
+      b: '1111',
+      expected: '11110',
+    },
   },
   {
     id: 4,
-    name: 'Different Lengths',
-    a: '100',
-    b: '110010',
-    expected: '110110',
+    label: 'Different Lengths',
+    data: {
+      a: '100',
+      b: '110010',
+      expected: '110110',
+    },
   },
 ]
 
@@ -75,7 +104,7 @@ interface Step {
   idxA: number
   idxB: number
   carry: number
-  res: string[]
+  res: Array<string>
   phase: string
   sumBeforeMod: number | null
   newDigit: string | null
@@ -83,10 +112,10 @@ interface Step {
   highlightIdxB: boolean
 }
 
-function generateSteps(a: string, b: string): Step[] {
-  const steps: Step[] = []
+function generateSteps(a: string, b: string): Array<Step> {
+  const steps: Array<Step> = []
   let carry = 0
-  const res: string[] = []
+  const res: Array<string> = []
   let idxA = a.length - 1
   let idxB = b.length - 1
 
@@ -413,23 +442,16 @@ function generateSteps(a: string, b: string): Step[] {
 }
 
 function AddBinaryVisualization() {
-  const [selectedTestCase, setSelectedTestCase] = useState(TEST_CASES[0])
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [selectedTestCase, setSelectedTestCase] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0)
 
-  const steps = useMemo(() => generateSteps(selectedTestCase.a, selectedTestCase.b), [selectedTestCase])
-  const step = steps[currentStepIndex]
+  const testCase = TEST_CASES[selectedTestCase]
+  const steps = useMemo(() => generateSteps(testCase.data.a, testCase.data.b), [testCase.data.a, testCase.data.b])
+  const step = steps[currentStep]
 
-  const handlePrevious = () => {
-    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-  }
-
-  const handleNext = () => {
-    setCurrentStepIndex((prev) => Math.min(steps.length - 1, prev + 1))
-  }
-
-  const handleTestCaseChange = (testCase: TestCase) => {
-    setSelectedTestCase(testCase)
-    setCurrentStepIndex(0)
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
   }
 
   // Pad strings for right-alignment
@@ -442,307 +464,194 @@ function AddBinaryVisualization() {
     return 'bg-red-500/20 text-red-400 border-red-500/50'
   }
 
-  return (
-    <div className="min-h-screen text-slate-100" style={{ backgroundColor: '#0a1628' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
+  const visualization = (
+    <>
+      {/* Binary Addition Display */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+        <h3 className="text-slate-300 font-mono text-sm mb-4">Binary Addition</h3>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#67</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    EASY
-                  </span>
+        {/* String A */}
+        <div className="mb-2">
+          <div className="flex items-center justify-end gap-1">
+            <span className="text-cyan-400 font-mono text-sm mr-2">a:</span>
+            {step.a.padStart(maxLen, ' ').split('').map((char, idx) => {
+              const realIdx = idx - (maxLen - step.a.length)
+              const isHighlighted = step.highlightIdxA && realIdx === step.idxA
+              return (
+                <div
+                  key={idx}
+                  className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
+                    char === ' '
+                      ? 'border-transparent'
+                      : isHighlighted
+                        ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200 ring-2 ring-cyan-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-300'
+                  }`}
+                >
+                  {char !== ' ' ? char : ''}
                 </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Add Binary
-                </h1>
-                <div className="flex gap-2">
-                  {['Math', 'String', 'Bit Manipulation'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
+        </div>
 
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(tc)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase.id === tc.id
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    {tc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* String B */}
+        <div className="mb-2">
+          <div className="flex items-center justify-end gap-1">
+            <span className="text-orange-400 font-mono text-sm mr-2">b:</span>
+            {step.b.padStart(maxLen, ' ').split('').map((char, idx) => {
+              const realIdx = idx - (maxLen - step.b.length)
+              const isHighlighted = step.highlightIdxB && realIdx === step.idxB
+              return (
+                <div
+                  key={idx}
+                  className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
+                    char === ' '
+                      ? 'border-transparent'
+                      : isHighlighted
+                        ? 'bg-orange-500/30 border-orange-400 text-orange-200 ring-2 ring-orange-400'
+                        : 'bg-slate-800 border-slate-700 text-slate-300'
+                  }`}
+                >
+                  {char !== ' ' ? char : ''}
+                </div>
+              )
+            })}
           </div>
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50">
-              <h2 className="font-display font-semibold text-slate-200">Algorithm</h2>
-            </div>
-            <div className="p-4 font-mono text-sm overflow-auto max-h-[600px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
+        </div>
+
+        {/* Divider line */}
+        <div className="flex justify-end mb-2">
+          <div className="w-10 mr-2"></div>
+          <div className="border-t-2 border-slate-600" style={{ width: `${maxLen * 44}px` }}></div>
+        </div>
+
+        {/* Result (reversed display) */}
+        <div>
+          <div className="flex items-center justify-end gap-1">
+            <span className="text-emerald-400 font-mono text-sm mr-2">res:</span>
+            {(step.phase === 'return' ? step.res.slice().reverse() : step.res.slice().reverse())
+              .join('')
+              .padStart(maxLen, ' ')
+              .split('')
+              .map((char, idx) => {
+                const isNew = step.newDigit && idx === maxLen - step.res.length
                 return (
                   <div
-                    key={line.num}
-                    className={`flex transition-all duration-200 ${
-                      isActive ? 'bg-cyan-500/10 -mx-4 px-4 border-l-2 border-cyan-400' : ''
+                    key={idx}
+                    className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
+                      char === ' '
+                        ? 'border-transparent'
+                        : isNew
+                          ? 'bg-emerald-500/30 border-emerald-400 text-emerald-200 animate-pulse'
+                          : 'bg-emerald-900/30 border-emerald-700 text-emerald-300'
                     }`}
                   >
-                    <span className={`w-8 text-right mr-4 select-none ${
-                      isActive ? 'text-cyan-400' : 'text-slate-600'
-                    }`}>
-                      {line.num}
-                    </span>
-                    <pre className={`flex-1 ${isActive ? 'text-cyan-100' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </pre>
+                    {char !== ' ' ? char : ''}
                   </div>
                 )
               })}
-            </div>
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Binary Addition Display */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-6 blueprint-grid">
-              <h3 className="font-display font-semibold text-slate-300 mb-4">Binary Addition</h3>
-
-              {/* String A */}
-              <div className="mb-2">
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-cyan-400 font-mono text-sm mr-2">a:</span>
-                  {step.a.padStart(maxLen, ' ').split('').map((char, idx) => {
-                    const realIdx = idx - (maxLen - step.a.length)
-                    const isHighlighted = step.highlightIdxA && realIdx === step.idxA
-                    return (
-                      <div
-                        key={idx}
-                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
-                          char === ' '
-                            ? 'border-transparent'
-                            : isHighlighted
-                              ? 'bg-cyan-500/30 border-cyan-400 text-cyan-200 ring-2 ring-cyan-400'
-                              : 'bg-slate-800 border-slate-700 text-slate-300'
-                        }`}
-                      >
-                        {char !== ' ' ? char : ''}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* String B */}
-              <div className="mb-2">
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-orange-400 font-mono text-sm mr-2">b:</span>
-                  {step.b.padStart(maxLen, ' ').split('').map((char, idx) => {
-                    const realIdx = idx - (maxLen - step.b.length)
-                    const isHighlighted = step.highlightIdxB && realIdx === step.idxB
-                    return (
-                      <div
-                        key={idx}
-                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
-                          char === ' '
-                            ? 'border-transparent'
-                            : isHighlighted
-                              ? 'bg-orange-500/30 border-orange-400 text-orange-200 ring-2 ring-orange-400'
-                              : 'bg-slate-800 border-slate-700 text-slate-300'
-                        }`}
-                      >
-                        {char !== ' ' ? char : ''}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Divider line */}
-              <div className="flex justify-end mb-2">
-                <div className="w-10 mr-2"></div>
-                <div className="border-t-2 border-slate-600" style={{ width: `${maxLen * 44}px` }}></div>
-              </div>
-
-              {/* Result (reversed display) */}
-              <div>
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-emerald-400 font-mono text-sm mr-2">res:</span>
-                  {(step.phase === 'return' ? step.res.slice().reverse() : step.res.slice().reverse())
-                    .join('')
-                    .padStart(maxLen, ' ')
-                    .split('')
-                    .map((char, idx) => {
-                      const isNew = step.newDigit && idx === maxLen - step.res.length
-                      return (
-                        <div
-                          key={idx}
-                          className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-lg transition-all ${
-                            char === ' '
-                              ? 'border-transparent'
-                              : isNew
-                                ? 'bg-emerald-500/30 border-emerald-400 text-emerald-200 animate-pulse'
-                                : 'bg-emerald-900/30 border-emerald-700 text-emerald-300'
-                          }`}
-                        >
-                          {char !== ' ' ? char : ''}
-                        </div>
-                      )
-                    })}
-                </div>
-              </div>
-            </div>
-
-            {/* Carry Display */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-display font-semibold text-slate-300">Carry</h3>
-                <div className={`px-6 py-3 rounded-lg border-2 font-mono text-3xl font-bold transition-all ${getCarryColor(step.carry)}`}>
-                  {step.carry}
-                </div>
-              </div>
-              {step.sumBeforeMod !== null && (
-                <div className="mt-3 text-center text-slate-400 font-mono text-sm">
-                  Sum = {step.sumBeforeMod} → Result bit: {step.sumBeforeMod % 2}, New carry: {Math.floor(step.sumBeforeMod / 2)}
-                </div>
-              )}
-            </div>
-
-            {/* Variables Panel */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="font-display font-semibold text-slate-300 mb-3">Pointers</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-cyan-400 text-xs font-display mb-1">idxA</div>
-                  <div className="text-slate-200 font-mono text-2xl">{step.idxA}</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-orange-400 text-xs font-display mb-1">idxB</div>
-                  <div className="text-slate-200 font-mono text-2xl">{step.idxB}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Result Array */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-display font-semibold text-slate-300">Result Array (building reversed)</h3>
-                <span className="text-slate-500 font-mono text-sm">[{step.res.join(', ')}]</span>
-              </div>
-              {step.phase === 'return' && (
-                <div className="text-emerald-400 font-mono">
-                  Final: "{step.res.slice().reverse().join('')}" = {selectedTestCase.expected}
-                </div>
-              )}
-            </div>
-
-            {/* Insight Panel */}
-            <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-500/20 p-4">
-              <h3 className="font-display font-semibold text-purple-300 mb-2">Insight</h3>
-              <p className="text-slate-300">{step.insight}</p>
-            </div>
-
-            {/* Complexity Panel */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="font-display font-semibold text-slate-300 mb-3">Complexity Analysis</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-slate-400 text-xs font-display mb-1">Time Complexity</div>
-                  <div className="text-emerald-400 font-mono text-lg">O(max(m, n))</div>
-                  <div className="text-slate-500 text-xs mt-1">Process each bit once</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-slate-400 text-xs font-display mb-1">Space Complexity</div>
-                  <div className="text-emerald-400 font-mono text-lg">O(max(m, n))</div>
-                  <div className="text-slate-500 text-xs mt-1">Result array size</div>
-                </div>
-              </div>
-              <div className="text-slate-500 text-xs mt-2 text-center">
-                where m = len(a), n = len(b)
-              </div>
-            </div>
           </div>
         </div>
+      </div>
 
-        {/* Navigation Controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePrevious}
-              disabled={currentStepIndex === 0}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentStepIndex === steps.length - 1}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-cyan-600 hover:bg-cyan-500 text-white"
-            >
-              Next
-            </button>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStepIndex + 1} of {steps.length}
-            </span>
-            <div className="w-48 h-2 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
-                style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
-              />
-            </div>
+      {/* Carry Display */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-slate-300 font-mono text-sm">Carry</h3>
+          <div className={`px-6 py-3 rounded-lg border-2 font-mono text-3xl font-bold transition-all ${getCarryColor(step.carry)}`}>
+            {step.carry}
           </div>
         </div>
+        {step.sumBeforeMod !== null && (
+          <div className="mt-3 text-center text-slate-400 font-mono text-sm">
+            Sum = {step.sumBeforeMod} → Result bit: {step.sumBeforeMod % 2}, New carry: {Math.floor(step.sumBeforeMod / 2)}
+          </div>
+        )}
+      </div>
 
-        {/* Description */}
-        <div className="mt-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
-          <p className="text-slate-300 font-display">{step.description}</p>
+      {/* Variables Panel */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <h3 className="text-slate-300 font-mono text-sm mb-3">Pointers</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-cyan-400 text-xs font-mono mb-1">idxA</div>
+            <div className="text-slate-200 font-mono text-2xl">{step.idxA}</div>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-orange-400 text-xs font-mono mb-1">idxB</div>
+            <div className="text-slate-200 font-mono text-2xl">{step.idxB}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Result Array */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-slate-300 font-mono text-sm">Result Array (building reversed)</h3>
+          <span className="text-slate-500 font-mono text-sm">[{step.res.join(', ')}]</span>
+        </div>
+        {step.phase === 'return' && (
+          <div className="text-emerald-400 font-mono">
+            Final: "{step.res.slice().reverse().join('')}" = {testCase.data.expected}
+          </div>
+        )}
+      </div>
+    </>
+  )
+
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">Right-to-Left Addition</h4>
+          <p className="text-slate-400">Process bits from least significant to most significant, just like manual addition.</p>
+        </div>
+        <div>
+          <h4 className="text-orange-400 font-mono mb-1">Carry Propagation</h4>
+          <p className="text-slate-400">Track carry bit and propagate it to the next position (carry // 2).</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(max(m, n))</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(max(m, n))</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '67',
+        title: 'Add Binary',
+        difficulty: 'easy',
+        tags: ['Math', 'String', 'Bit Manipulation'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="add_binary.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

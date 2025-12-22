@@ -84,7 +84,7 @@ export const getVisualization = query({
     v.null()
   ),
   handler: async (ctx, args) => {
-    const visualization = await ctx.db.get(args.id);
+    const visualization = await ctx.db.get("visualizations", args.id);
     return visualization;
   },
 });

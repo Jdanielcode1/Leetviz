@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/three-sum')({
   component: ThreeSum,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def threeSum(self, nums: List[int]) -> List[List[int]]:' },
   { num: 3, code: '        res = []' },
@@ -39,38 +41,59 @@ const PROBLEM_DESCRIPTION = `Given an integer array nums, return all the triplet
 
 The output should not contain any duplicate triplets.`
 
+const EXAMPLES: Array<Example> = [
+  {
+    input: 'nums = [-1,0,1,2,-1,-4]',
+    output: '[[-1,-1,2],[-1,0,1]]',
+    explanation: 'nums[0] + nums[1] + nums[2] = (-1) + 0 + 1 = 0. nums[1] + nums[2] + nums[4] = 0 + 1 + (-1) = 0. The distinct triplets are [-1,0,1] and [-1,-1,2].',
+  },
+  {
+    input: 'nums = [0,1,1]',
+    output: '[]',
+    explanation: 'The only possible triplet does not sum up to 0.',
+  },
+  {
+    input: 'nums = [0,0,0]',
+    output: '[[0,0,0]]',
+    explanation: 'The only possible triplet sums up to 0.',
+  },
+]
+
+const CONSTRAINTS = [
+  '3 <= nums.length <= 3000',
+  '-10^5 <= nums[i] <= 10^5',
+]
+
 interface Step {
   lineNumber: number
   description: string
   insight: string
-  originalNums: number[]
-  nums: number[]
+  originalNums: Array<number>
+  nums: Array<number>
   i: number | null
   l: number | null
   r: number | null
   currentSum: number | null
-  result: number[][]
+  result: Array<Array<number>>
   phase: 'init' | 'sort' | 'fix-i' | 'skip-pos' | 'skip-dup' | 'init-pointers' | 'calc-sum' | 'move-r' | 'move-l' | 'found' | 'skip-dup-l' | 'complete'
 }
 
-interface TestCase {
-  id: number
-  nums: number[]
-  expected: number[][]
+interface TestCaseData {
+  nums: Array<number>
+  expected: Array<Array<number>>
 }
 
-const TEST_CASES: TestCase[] = [
-  { id: 1, nums: [-1, 0, 1, 2, -1, -4], expected: [[-1, -1, 2], [-1, 0, 1]] },
-  { id: 2, nums: [0, 1, 1], expected: [] },
-  { id: 3, nums: [0, 0, 0], expected: [[0, 0, 0]] },
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  { id: 1, label: '[-1,0,1,2,-1,-4]', data: { nums: [-1, 0, 1, 2, -1, -4], expected: [[-1, -1, 2], [-1, 0, 1]] } },
+  { id: 2, label: '[0,1,1]', data: { nums: [0, 1, 1], expected: [] } },
+  { id: 3, label: '[0,0,0]', data: { nums: [0, 0, 0], expected: [[0, 0, 0]] } },
 ]
 
-function generateSteps(originalNums: number[]): Step[] {
-  const steps: Step[] = []
+function generateSteps(originalNums: Array<number>): Array<Step> {
+  const steps: Array<Step> = []
   const nums = [...originalNums].sort((a, b) => a - b)
-  const result: number[][] = []
+  const result: Array<Array<number>> = []
 
-  // Init
   steps.push({
     lineNumber: 3,
     description: 'Initialize empty result array',
@@ -85,7 +108,6 @@ function generateSteps(originalNums: number[]): Step[] {
     phase: 'init',
   })
 
-  // Sort
   steps.push({
     lineNumber: 4,
     description: `Sort array: [${originalNums.join(', ')}] → [${nums.join(', ')}]`,
@@ -103,7 +125,6 @@ function generateSteps(originalNums: number[]): Step[] {
   for (let i = 0; i < nums.length; i++) {
     const a = nums[i]
 
-    // Check positive break
     if (a > 0) {
       steps.push({
         lineNumber: 7,
@@ -121,7 +142,6 @@ function generateSteps(originalNums: number[]): Step[] {
       break
     }
 
-    // Fix i
     steps.push({
       lineNumber: 6,
       description: `Fix i=${i}, a = nums[${i}] = ${a}`,
@@ -136,7 +156,6 @@ function generateSteps(originalNums: number[]): Step[] {
       phase: 'fix-i',
     })
 
-    // Skip duplicate i
     if (i > 0 && a === nums[i - 1]) {
       steps.push({
         lineNumber: 10,
@@ -157,7 +176,6 @@ function generateSteps(originalNums: number[]): Step[] {
     let l = i + 1
     let r = nums.length - 1
 
-    // Init pointers
     steps.push({
       lineNumber: 13,
       description: `Initialize pointers: l = ${l}, r = ${r}`,
@@ -175,7 +193,6 @@ function generateSteps(originalNums: number[]): Step[] {
     while (l < r) {
       const threeSum = a + nums[l] + nums[r]
 
-      // Calculate sum
       steps.push({
         lineNumber: 15,
         description: `threeSum = ${a} + ${nums[l]} + ${nums[r]} = ${threeSum}`,
@@ -221,7 +238,6 @@ function generateSteps(originalNums: number[]): Step[] {
         })
         l++
       } else {
-        // Found triplet
         result.push([a, nums[l], nums[r]])
         steps.push({
           lineNumber: 21,
@@ -240,7 +256,6 @@ function generateSteps(originalNums: number[]): Step[] {
         l++
         r--
 
-        // Skip duplicates for l
         while (l < r && nums[l] === nums[l - 1]) {
           steps.push({
             lineNumber: 24,
@@ -261,7 +276,6 @@ function generateSteps(originalNums: number[]): Step[] {
     }
   }
 
-  // Complete
   steps.push({
     lineNumber: 27,
     description: `Return ${result.length} triplet(s)`,
@@ -286,7 +300,7 @@ function ThreeSum() {
   const [currentStep, setCurrentStep] = useState(0)
 
   const testCase = TEST_CASES[selectedTestCase]
-  const steps = useMemo(() => generateSteps(testCase.nums), [testCase.nums])
+  const steps = useMemo(() => generateSteps(testCase.data.nums), [testCase.data.nums])
   const step = steps[currentStep]
 
   const handleTestCaseChange = (index: number) => {
@@ -301,345 +315,179 @@ function ThreeSum() {
     return 'text-blue-400'
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .font-display { font-family: 'Outfit', sans-serif; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
-        .code-highlight {
-          background: linear-gradient(90deg, rgba(251, 146, 60, 0.15) 0%, transparent 100%);
-          border-left: 2px solid #fb923c;
-        }
-
-        .glow-orange {
-          box-shadow: 0 0 15px rgba(251, 146, 60, 0.4);
-        }
-
-        .glow-cyan {
-          box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
-        }
-
-        .glow-purple {
-          box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-        }
-
-        .glow-green {
-          box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-        }
+        .glow-orange { box-shadow: 0 0 15px rgba(251, 146, 60, 0.4); }
+        .glow-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
+        .glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#15</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  3Sum
-                </h1>
-                <div className="flex gap-2">
-                  {['Array', 'Two Pointers', 'Sorting'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Problem Description */}
-          <div className="mb-8 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-            <p className="text-slate-400 font-mono text-sm whitespace-pre-line">{PROBLEM_DESCRIPTION}</p>
-          </div>
-
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc, idx) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(idx)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase === idx
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    [{tc.nums.join(',')}]
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setCurrentStep(0)}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              Reset
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              ← Prev
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-              disabled={currentStep === steps.length - 1}
-              className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
-            >
-              Next →
-            </button>
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStep + 1} / {steps.length}
+      {/* Array Visualization */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-slate-300 font-mono text-sm">Sorted Array</span>
+          {step.currentSum !== null && (
+            <span className={`font-mono text-sm ${getSumColor(step.currentSum)}`}>
+              Sum: {step.currentSum} {step.currentSum === 0 ? '✓' : step.currentSum > 0 ? '(too high)' : '(too low)'}
             </span>
-          </div>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {step.nums.map((num, idx) => {
+              const isI = idx === step.i
+              const isL = idx === step.l
+              const isR = idx === step.r
 
-          {/* Progress Bar */}
-          <div className="mb-8 h-1 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-            />
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Code Panel */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                </div>
-                <span className="text-slate-500 font-mono text-xs">three_sum.py</span>
-              </div>
-              <div className="p-4 font-mono text-sm overflow-x-auto">
-                {CODE_LINES.map((line) => (
+              return (
+                <div key={idx} className="flex flex-col items-center">
+                  <div className="h-5 text-xs font-mono flex gap-1">
+                    {isI && <span className="text-orange-400">i</span>}
+                    {isL && <span className="text-cyan-400">l</span>}
+                    {isR && <span className="text-purple-400">r</span>}
+                  </div>
                   <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      step.lineNumber === line.num ? 'code-highlight' : ''
+                    className={`w-10 h-10 flex items-center justify-center rounded-lg font-mono text-sm transition-all duration-300 ${
+                      isI
+                        ? 'bg-orange-500/30 border-2 border-orange-400 text-orange-300 glow-orange'
+                        : isL
+                        ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300 glow-cyan'
+                        : isR
+                        ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300 glow-purple'
+                        : 'bg-slate-800 border border-slate-600 text-slate-300'
                     }`}
                   >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none flex-shrink-0">
-                      {line.num}
-                    </span>
-                    <code className={`whitespace-pre ${step.lineNumber === line.num ? 'text-cyan-300' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </code>
+                    {num}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visualization Panel */}
-            <div className="space-y-6">
-              {/* Array Visualization */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-slate-300 font-mono text-sm">SORTED ARRAY</span>
-                  {step.currentSum !== null && (
-                    <span className={`font-mono text-sm ${getSumColor(step.currentSum)}`}>
-                      Sum: {step.currentSum} {step.currentSum === 0 ? '✓' : step.currentSum > 0 ? '(too high)' : '(too low)'}
-                    </span>
-                  )}
+                  <span className="text-slate-600 text-xs mt-1 font-mono">{idx}</span>
                 </div>
-                <div className="p-6">
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {step.nums.map((num, idx) => {
-                      const isI = idx === step.i
-                      const isL = idx === step.l
-                      const isR = idx === step.r
-
-                      return (
-                        <div key={idx} className="flex flex-col items-center">
-                          {/* Pointer labels */}
-                          <div className="h-6 text-xs font-mono flex gap-1">
-                            {isI && <span className="text-orange-400">i</span>}
-                            {isL && <span className="text-cyan-400">l</span>}
-                            {isR && <span className="text-purple-400">r</span>}
-                          </div>
-                          {/* Cell */}
-                          <div
-                            className={`w-12 h-12 flex items-center justify-center rounded-lg font-mono text-lg transition-all duration-300 ${
-                              isI
-                                ? 'bg-orange-500/30 border-2 border-orange-400 text-orange-300 glow-orange'
-                                : isL
-                                ? 'bg-cyan-500/30 border-2 border-cyan-400 text-cyan-300 glow-cyan'
-                                : isR
-                                ? 'bg-purple-500/30 border-2 border-purple-400 text-purple-300 glow-purple'
-                                : 'bg-slate-800 border border-slate-600 text-slate-300'
-                            }`}
-                          >
-                            {num}
-                          </div>
-                          {/* Index */}
-                          <span className="text-slate-600 text-xs mt-1 font-mono">{idx}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Sum Calculation */}
-              {step.i !== null && step.l !== null && step.r !== null && step.currentSum !== null && (
-                <div className={`rounded-xl border p-4 ${
-                  step.currentSum === 0
-                    ? 'bg-emerald-500/10 border-emerald-500/30'
-                    : step.currentSum > 0
-                    ? 'bg-red-500/10 border-red-500/30'
-                    : 'bg-blue-500/10 border-blue-500/30'
-                }`}>
-                  <div className="flex items-center justify-center gap-2 font-mono text-lg">
-                    <span className="text-orange-400">{step.nums[step.i]}</span>
-                    <span className="text-slate-500">+</span>
-                    <span className="text-cyan-400">{step.nums[step.l]}</span>
-                    <span className="text-slate-500">+</span>
-                    <span className="text-purple-400">{step.nums[step.r]}</span>
-                    <span className="text-slate-500">=</span>
-                    <span className={getSumColor(step.currentSum)}>{step.currentSum}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Found Triplets */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                  <span className="text-slate-300 font-mono text-sm">FOUND TRIPLETS ({step.result.length})</span>
-                </div>
-                <div className="p-6">
-                  {step.result.length === 0 ? (
-                    <div className="text-center text-slate-600 font-mono">No triplets found yet</div>
-                  ) : (
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {step.result.map((triplet, idx) => (
-                        <div
-                          key={idx}
-                          className="px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-mono glow-green"
-                        >
-                          [{triplet.join(', ')}]
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Insight Panel */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                  <span className="text-slate-300 font-mono text-sm">CURRENT STEP</span>
-                </div>
-                <div className="p-6">
-                  <p className="text-slate-200 font-display text-lg mb-3">{step.description}</p>
-                  <p className="text-slate-400 font-display">{step.insight}</p>
-                </div>
-              </div>
-
-              {/* Result */}
-              {step.phase === 'complete' && (
-                <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-emerald-400 font-mono text-lg">
-                        Found {step.result.length} triplet(s)
-                      </div>
-                      <div className="text-slate-500 font-mono text-sm">
-                        Expected: {testCase.expected.length} triplet(s)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              )
+            })}
           </div>
+        </div>
+      </div>
 
-          {/* Algorithm Explanation */}
-          <div className="mt-8 bg-slate-900/50 rounded-xl border border-slate-700 p-6">
-            <h3 className="text-slate-200 font-display font-semibold text-lg mb-4">Algorithm Insight</h3>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <h4 className="text-orange-400 font-mono mb-2">Fix First Element</h4>
-                <p className="text-slate-400">
-                  Iterate through array, fixing one element at a time.
-                  For each fixed element, use two pointers to find pairs.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-cyan-400 font-mono mb-2">Two Pointer Technique</h4>
-                <p className="text-slate-400">
-                  After sorting, move left/right pointers based on sum.
-                  Too high? Move right left. Too low? Move left right.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-purple-400 font-mono mb-2">Skip Duplicates</h4>
-                <p className="text-slate-400">
-                  Skip duplicate values for both the fixed element and
-                  left pointer to avoid duplicate triplets in result.
-                </p>
-              </div>
+      {/* Sum Calculation */}
+      {step.i !== null && step.l !== null && step.r !== null && step.currentSum !== null && (
+        <div className={`rounded-xl border p-3 ${
+          step.currentSum === 0
+            ? 'bg-emerald-500/10 border-emerald-500/30'
+            : step.currentSum > 0
+            ? 'bg-red-500/10 border-red-500/30'
+            : 'bg-blue-500/10 border-blue-500/30'
+        }`}>
+          <div className="flex items-center justify-center gap-2 font-mono text-sm">
+            <span className="text-orange-400">{step.nums[step.i]}</span>
+            <span className="text-slate-500">+</span>
+            <span className="text-cyan-400">{step.nums[step.l]}</span>
+            <span className="text-slate-500">+</span>
+            <span className="text-purple-400">{step.nums[step.r]}</span>
+            <span className="text-slate-500">=</span>
+            <span className={getSumColor(step.currentSum)}>{step.currentSum}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Found Triplets */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Found Triplets ({step.result.length})</span>
+        </div>
+        <div className="p-4">
+          {step.result.length === 0 ? (
+            <div className="text-center text-slate-600 font-mono text-sm">No triplets found yet</div>
+          ) : (
+            <div className="flex flex-wrap gap-2 justify-center">
+              {step.result.map((triplet, idx) => (
+                <div
+                  key={idx}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-mono text-sm glow-green"
+                >
+                  [{triplet.join(', ')}]
+                </div>
+              ))}
             </div>
-            <div className="grid md:grid-cols-2 gap-6 text-sm mt-4">
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-purple-400 font-mono mb-2">Time Complexity: O(n²)</h4>
-                <p className="text-slate-400">
-                  Sorting takes O(n log n). For each element, two-pointer scan is O(n). Total: O(n²).
-                </p>
-              </div>
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-pink-400 font-mono mb-2">Space Complexity: O(1) or O(n)</h4>
-                <p className="text-slate-400">
-                  Depends on sorting implementation. Excluding output array, O(1) extra space.
-                </p>
+          )}
+        </div>
+      </div>
+
+      {/* Completion */}
+      {step.phase === 'complete' && (
+        <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-mono">Found {step.result.length} triplet(s)</div>
+              <div className="text-slate-500 font-mono text-xs">
+                Expected: {testCase.data.expected.length} triplet(s)
               </div>
             </div>
           </div>
         </div>
+      )}
+    </>
+  )
+
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-orange-400 font-mono mb-1">Fix First Element</h4>
+          <p className="text-slate-400">Iterate through array, fixing one element at a time.</p>
+        </div>
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">Two Pointer Technique</h4>
+          <p className="text-slate-400">Move left/right pointers based on sum comparison.</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n²)</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(1)</span>
+          </div>
+        </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '15',
+        title: '3Sum',
+        difficulty: 'medium',
+        tags: ['Array', 'Two Pointers', 'Sorting'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="three_sum.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

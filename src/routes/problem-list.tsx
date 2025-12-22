@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/problem-list')({
   component: ProblemsListPage,
@@ -10,7 +10,7 @@ interface Problem {
   title: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
   category: string
-  tags: string[]
+  tags: Array<string>
   path: string
   description: string
   acceptance?: number
@@ -18,7 +18,7 @@ interface Problem {
   starred?: boolean
 }
 
-const problems: Problem[] = [
+const problems: Array<Problem> = [
   {
     id: 2,
     title: 'Add Two Numbers',
@@ -308,7 +308,7 @@ const problems: Problem[] = [
 ]
 
 // Extract unique tags with counts
-const getTagsWithCounts = (problems: Problem[]) => {
+const getTagsWithCounts = (problems: Array<Problem>) => {
   const tagCounts: Record<string, number> = {}
   problems.forEach((p) => {
     p.tags.forEach((tag) => {
@@ -321,7 +321,7 @@ const getTagsWithCounts = (problems: Problem[]) => {
 }
 
 // Extract unique categories
-const getCategories = (problems: Problem[]) => {
+const getCategories = (problems: Array<Problem>) => {
   const categories = new Set(problems.map((p) => p.category))
   return ['All Topics', ...Array.from(categories)]
 }

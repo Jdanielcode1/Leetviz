@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/validate-bst')({
   component: ValidateBSTVisualization,
@@ -32,15 +34,13 @@ interface Step {
   currentNodeIndex: number | null
   nodeStatuses: Record<number, NodeStatus>
   currentRange: { min: string; max: string }
-  callStack: CallStackItem[]
+  callStack: Array<CallStackItem>
   phase: string
   returnValue: boolean | null
 }
 
-interface TestCase {
-  name: string
-  description: string
-  nodes: TreeNode[]
+interface TestCaseData {
+  nodes: Array<TreeNode>
   expected: boolean
 }
 
@@ -51,7 +51,7 @@ A valid BST is defined as follows:
 • The right subtree of a node contains only nodes with keys strictly greater than the node's key.
 • Both the left and right subtrees must also be binary search trees.`
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def isValidBST(self, root: Optional[TreeNode]) -> bool:' },
   { num: 3, code: '        def valid(node, minimum, maximum):' },
@@ -67,49 +67,73 @@ const CODE_LINES = [
   { num: 13, code: '        return valid(root, float("-inf"), float("inf"))' },
 ]
 
-const TEST_CASES: TestCase[] = [
+const EXAMPLES: Array<Example> = [
   {
-    name: 'Example 1',
-    description: 'Valid BST',
-    nodes: [
-      { val: 2, left: 1, right: 2 },
-      { val: 1, left: null, right: null },
-      { val: 3, left: null, right: null },
-    ],
-    expected: true,
+    input: 'root = [2,1,3]',
+    output: 'true',
+    explanation: 'The tree is a valid BST where all left values are less than root, and all right values are greater.',
   },
   {
-    name: 'Example 2',
-    description: 'Invalid - 4 < 5 in right subtree',
-    nodes: [
-      { val: 5, left: 1, right: 2 },
-      { val: 1, left: null, right: null },
-      { val: 4, left: 3, right: 4 },
-      { val: 3, left: null, right: null },
-      { val: 6, left: null, right: null },
-    ],
-    expected: false,
-  },
-  {
-    name: 'Example 3',
-    description: 'Larger valid BST',
-    nodes: [
-      { val: 10, left: 1, right: 2 },
-      { val: 5, left: 3, right: 4 },
-      { val: 15, left: 5, right: 6 },
-      { val: 3, left: null, right: null },
-      { val: 7, left: null, right: null },
-      { val: 12, left: null, right: null },
-      { val: 20, left: null, right: null },
-    ],
-    expected: true,
+    input: 'root = [5,1,4,null,null,3,6]',
+    output: 'false',
+    explanation: 'The root node\'s value is 5 but its right child\'s value is 4, which violates the BST property.',
   },
 ]
 
-function calculateTreeLayout(nodes: TreeNode[]): NodePosition[] {
+const CONSTRAINTS = [
+  'The number of nodes in the tree is in the range [1, 10^4]',
+  '-2^31 <= Node.val <= 2^31 - 1',
+]
+
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  {
+    id: 1,
+    label: 'Valid BST',
+    data: {
+      nodes: [
+        { val: 2, left: 1, right: 2 },
+        { val: 1, left: null, right: null },
+        { val: 3, left: null, right: null },
+      ],
+      expected: true,
+    },
+  },
+  {
+    id: 2,
+    label: 'Invalid - 4 < 5',
+    data: {
+      nodes: [
+        { val: 5, left: 1, right: 2 },
+        { val: 1, left: null, right: null },
+        { val: 4, left: 3, right: 4 },
+        { val: 3, left: null, right: null },
+        { val: 6, left: null, right: null },
+      ],
+      expected: false,
+    },
+  },
+  {
+    id: 3,
+    label: 'Larger valid BST',
+    data: {
+      nodes: [
+        { val: 10, left: 1, right: 2 },
+        { val: 5, left: 3, right: 4 },
+        { val: 15, left: 5, right: 6 },
+        { val: 3, left: null, right: null },
+        { val: 7, left: null, right: null },
+        { val: 12, left: null, right: null },
+        { val: 20, left: null, right: null },
+      ],
+      expected: true,
+    },
+  },
+]
+
+function calculateTreeLayout(nodes: Array<TreeNode>): Array<NodePosition> {
   if (nodes.length === 0) return []
 
-  const positions: NodePosition[] = new Array(nodes.length)
+  const positions: Array<NodePosition> = new Array(nodes.length)
   const width = 400
   const levelHeight = 70
 
@@ -142,7 +166,7 @@ function calculateTreeLayout(nodes: TreeNode[]): NodePosition[] {
   }
 
   // Calculate positions level by level
-  const queue: number[] = [0]
+  const queue: Array<number> = [0]
   while (queue.length > 0) {
     const index = queue.shift()!
     const depth = getDepth(index)
@@ -165,9 +189,9 @@ function formatRange(val: number | string): string {
   return String(val)
 }
 
-function generateSteps(testCase: TestCase): Step[] {
-  const steps: Step[] = []
-  const { nodes } = testCase
+function generateSteps(testCaseData: TestCaseData): Array<Step> {
+  const steps: Array<Step> = []
+  const { nodes } = testCaseData
   const nodeStatuses: Record<number, NodeStatus> = {}
 
   // Initialize all nodes as unchecked
@@ -193,7 +217,7 @@ function generateSteps(testCase: TestCase): Step[] {
     nodeIndex: number | null,
     min: number,
     max: number,
-    callStack: CallStackItem[]
+    callStack: Array<CallStackItem>
   ): boolean {
     const minStr = formatRange(min)
     const maxStr = formatRange(max)
@@ -230,7 +254,7 @@ function generateSteps(testCase: TestCase): Step[] {
     const node = nodes[nodeIndex]
     nodeStatuses[nodeIndex] = 'checking'
 
-    const newCallStack: CallStackItem[] = [
+    const newCallStack: Array<CallStackItem> = [
       ...callStack,
       { nodeIndex, nodeVal: node.val, min: minStr, max: maxStr },
     ]
@@ -346,60 +370,19 @@ function generateSteps(testCase: TestCase): Step[] {
 }
 
 function ValidateBSTVisualization() {
-  const [selectedCase, setSelectedCase] = useState(0)
-  const [steps, setSteps] = useState<Step[]>([])
+  const [selectedTestCase, setSelectedTestCase] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [speed, setSpeed] = useState(1000)
-  const [showProblem, setShowProblem] = useState(false)
 
-  useEffect(() => {
-    const newSteps = generateSteps(TEST_CASES[selectedCase])
-    setSteps(newSteps)
+  const testCase = TEST_CASES[selectedTestCase]
+  const steps = useMemo(() => generateSteps(testCase.data), [testCase.data])
+  const step = steps[currentStep]
+
+  const positions = calculateTreeLayout(testCase.data.nodes)
+
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
     setCurrentStep(0)
-    setIsPlaying(false)
-  }, [selectedCase])
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    if (isPlaying && currentStep < steps.length - 1) {
-      timer = setTimeout(() => setCurrentStep(prev => prev + 1), speed)
-    } else if (currentStep >= steps.length - 1) {
-      setIsPlaying(false)
-    }
-    return () => clearTimeout(timer)
-  }, [isPlaying, currentStep, steps.length, speed])
-
-  const step = steps[currentStep] || {
-    lineNumber: 0,
-    description: '',
-    insight: '',
-    currentNodeIndex: null,
-    nodeStatuses: {},
-    currentRange: { min: '-∞', max: '∞' },
-    callStack: [],
-    phase: 'init',
-    returnValue: null,
-  } as Step
-
-  const testCase = TEST_CASES[selectedCase]
-  const positions = calculateTreeLayout(testCase.nodes)
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight' && currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1)
-    } else if (e.key === 'ArrowLeft' && currentStep > 0) {
-      setCurrentStep(prev => prev - 1)
-    } else if (e.key === ' ') {
-      e.preventDefault()
-      setIsPlaying(prev => !prev)
-    }
-  }, [currentStep, steps.length])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
+  }
 
   const getNodeColor = (index: number) => {
     const status = step.nodeStatuses[index] || 'unchecked'
@@ -443,425 +426,208 @@ function ValidateBSTVisualization() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100">
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
-          background-size: 24px 24px;
-        }
-
-        .glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
-        .glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.4); }
-
         @keyframes pulse-node {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
         }
-
         .active-node { animation: pulse-node 1s ease-in-out infinite; }
-
-        .code-highlight {
-          background: linear-gradient(90deg, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.05) 100%);
-          border-left: 3px solid #22d3ee;
-        }
-
         .stack-enter { animation: slideUp 0.3s ease-out; }
-
         @keyframes slideUp {
           from { transform: translateY(20px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
         }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#98</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Validate Binary Search Tree
-                </h1>
-                <div className="flex gap-2">
-                  {['Tree', 'BST', 'Recursion'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={() => setShowProblem(!showProblem)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 text-sm font-mono transition-all"
-              >
-                {showProblem ? 'Hide Problem' : 'Show Problem'}
-              </button>
-            </div>
-          </div>
-
-        {/* Problem Description */}
-        {showProblem && (
-          <div className="mb-8 p-6 bg-slate-900/50 border border-cyan-500/20 rounded-xl">
-            <h2 className="font-display text-lg font-semibold text-cyan-400 mb-4">Problem Description</h2>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-line font-mono text-sm mb-6">
-              {PROBLEM_DESCRIPTION}
-            </p>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <div className="text-orange-400 font-mono text-xs mb-2">INPUT</div>
-                <code className="text-slate-300 text-sm">root = [{testCase.nodes.map(n => n.val).join(', ')}]</code>
-              </div>
-              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <div className="text-cyan-400 font-mono text-xs mb-2">OUTPUT</div>
-                <code className="text-slate-300 text-sm">{testCase.expected ? 'true' : 'false'}</code>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Test Case Selector */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          {TEST_CASES.map((tc, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedCase(idx)}
-              className={`px-4 py-2 rounded-lg font-mono text-sm transition-all border ${
-                selectedCase === idx
-                  ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50 glow-cyan'
-                  : 'bg-slate-800/30 text-slate-400 border-slate-700 hover:border-slate-600'
-              }`}
-            >
-              {tc.name}
-            </button>
-          ))}
+      {/* Tree Visualization */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-800/70 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-slate-300 font-mono text-sm">BINARY TREE</span>
+          <span className="text-slate-500 font-mono text-xs">
+            Range: ({step.currentRange.min}, {step.currentRange.max})
+          </span>
         </div>
+        <div className="p-6">
+          <svg width="100%" height="300" viewBox="0 0 400 300" className="mx-auto">
+            {/* Draw edges */}
+            {testCase.data.nodes.map((node, i) => {
+              const pos = positions[i]
+              if (!pos) return null
 
-        {/* Controls */}
-        <div className="mb-6 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-900/50 rounded-lg p-1 border border-slate-700">
-            <button
-              onClick={() => setCurrentStep(0)}
-              disabled={currentStep === 0}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`p-3 rounded-lg transition-all ${
-                isPlaying ? 'bg-orange-500/20 text-orange-400 glow-orange' : 'bg-cyan-500/20 text-cyan-400 glow-cyan'
-              }`}
-            >
-              {isPlaying ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-              disabled={currentStep >= steps.length - 1}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setCurrentStep(steps.length - 1)}
-              disabled={currentStep >= steps.length - 1}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+              return (
+                <g key={`edges-${i}`}>
+                  {node.left !== null && positions[node.left] && (
+                    <line
+                      x1={pos.x}
+                      y1={pos.y}
+                      x2={positions[node.left].x}
+                      y2={positions[node.left].y}
+                      stroke="#334155"
+                      strokeWidth="2"
+                    />
+                  )}
+                  {node.right !== null && positions[node.right] && (
+                    <line
+                      x1={pos.x}
+                      y1={pos.y}
+                      x2={positions[node.right].x}
+                      y2={positions[node.right].y}
+                      stroke="#334155"
+                      strokeWidth="2"
+                    />
+                  )}
+                </g>
+              )
+            })}
 
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-slate-500 font-mono">SPEED</span>
-            <input
-              type="range"
-              min="200"
-              max="1500"
-              step="100"
-              value={1700 - speed}
-              onChange={(e) => setSpeed(1700 - parseInt(e.target.value))}
-              className="w-24 accent-cyan-500"
-            />
-          </div>
+            {/* Draw nodes */}
+            {testCase.data.nodes.map((node, i) => {
+              const pos = positions[i]
+              if (!pos) return null
+              const colors = getNodeColor(i)
+              const isActive = step.currentNodeIndex === i
 
-          <div className="ml-auto text-slate-500 font-mono text-sm">
-            STEP {currentStep + 1} / {steps.length}
-          </div>
+              return (
+                <g key={`node-${i}`} className={isActive ? 'active-node' : ''}>
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r="25"
+                    fill={colors.fill}
+                    stroke={colors.stroke}
+                    strokeWidth="3"
+                    style={{ filter: colors.glow !== 'none' ? `drop-shadow(${colors.glow})` : undefined }}
+                  />
+                  <text
+                    x={pos.x}
+                    y={pos.y + 6}
+                    textAnchor="middle"
+                    fill={colors.text}
+                    fontSize="16"
+                    fontWeight="bold"
+                    fontFamily="'IBM Plex Mono', monospace"
+                  >
+                    {node.val}
+                  </text>
+
+                  {/* Status indicator */}
+                  {step.nodeStatuses[i] === 'valid' && (
+                    <text x={pos.x + 30} y={pos.y - 15} fill="#4ade80" fontSize="16">✓</text>
+                  )}
+                  {step.nodeStatuses[i] === 'invalid' && (
+                    <text x={pos.x + 30} y={pos.y - 15} fill="#f87171" fontSize="16">✗</text>
+                  )}
+                </g>
+              )
+            })}
+          </svg>
         </div>
+      </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8 h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
-            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-          />
+      {/* Call Stack */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-800/70 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-slate-300 font-mono text-sm">CALL STACK</span>
+          <span className="text-slate-500 font-mono text-xs">
+            {step.callStack.length} frame{step.callStack.length !== 1 ? 's' : ''}
+          </span>
         </div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
-              </div>
-              <span className="text-slate-500 font-mono text-xs">validate_bst.py</span>
-            </div>
-            <div className="p-4 font-mono text-sm overflow-x-auto">
-              {CODE_LINES.map((line) => (
+        <div className="p-4 min-h-[180px] flex flex-col justify-end">
+          {step.callStack.length > 0 ? (
+            <div className="space-y-2">
+              {[...step.callStack].reverse().map((frame, idx) => (
                 <div
-                  key={line.num}
-                  className={`flex py-0.5 rounded transition-all duration-200 ${
-                    step.lineNumber === line.num ? 'code-highlight' : ''
+                  key={idx}
+                  className={`stack-enter px-3 py-2 rounded-lg font-mono text-sm border transition-all ${
+                    idx === 0
+                      ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                      : 'bg-slate-800 border-slate-600 text-slate-400'
                   }`}
                 >
-                  <span className="w-8 text-right pr-4 text-slate-600 select-none flex-shrink-0">
-                    {line.num}
-                  </span>
-                  <code className={`whitespace-pre ${step.lineNumber === line.num ? 'text-cyan-300' : 'text-slate-400'}`}>
-                    {line.code || ' '}
-                  </code>
+                  <div className="flex justify-between items-center">
+                    <span>valid({frame.nodeVal}, {frame.min}, {frame.max})</span>
+                    {idx === 0 && <span className="text-xs text-slate-500">← current</span>}
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="space-y-6">
-            {/* Tree Visualization */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                <span className="text-slate-300 font-mono text-sm">BINARY TREE</span>
-                <span className="text-slate-500 font-mono text-xs">
-                  Range: ({step.currentRange.min}, {step.currentRange.max})
-                </span>
-              </div>
-              <div className="p-6">
-                <svg width="100%" height="300" viewBox="0 0 400 300" className="mx-auto">
-                  {/* Draw edges */}
-                  {testCase.nodes.map((node, i) => {
-                    const pos = positions[i]
-                    if (!pos) return null
-
-                    return (
-                      <g key={`edges-${i}`}>
-                        {node.left !== null && positions[node.left] && (
-                          <line
-                            x1={pos.x}
-                            y1={pos.y}
-                            x2={positions[node.left].x}
-                            y2={positions[node.left].y}
-                            stroke="#334155"
-                            strokeWidth="2"
-                          />
-                        )}
-                        {node.right !== null && positions[node.right] && (
-                          <line
-                            x1={pos.x}
-                            y1={pos.y}
-                            x2={positions[node.right].x}
-                            y2={positions[node.right].y}
-                            stroke="#334155"
-                            strokeWidth="2"
-                          />
-                        )}
-                      </g>
-                    )
-                  })}
-
-                  {/* Draw nodes */}
-                  {testCase.nodes.map((node, i) => {
-                    const pos = positions[i]
-                    if (!pos) return null
-                    const colors = getNodeColor(i)
-                    const isActive = step.currentNodeIndex === i
-
-                    return (
-                      <g key={`node-${i}`} className={isActive ? 'active-node' : ''}>
-                        <circle
-                          cx={pos.x}
-                          cy={pos.y}
-                          r="25"
-                          fill={colors.fill}
-                          stroke={colors.stroke}
-                          strokeWidth="3"
-                          style={{ filter: colors.glow !== 'none' ? `drop-shadow(${colors.glow})` : undefined }}
-                        />
-                        <text
-                          x={pos.x}
-                          y={pos.y + 6}
-                          textAnchor="middle"
-                          fill={colors.text}
-                          fontSize="16"
-                          fontWeight="bold"
-                          fontFamily="'IBM Plex Mono', monospace"
-                        >
-                          {node.val}
-                        </text>
-
-                        {/* Status indicator */}
-                        {step.nodeStatuses[i] === 'valid' && (
-                          <text x={pos.x + 30} y={pos.y - 15} fill="#4ade80" fontSize="16">✓</text>
-                        )}
-                        {step.nodeStatuses[i] === 'invalid' && (
-                          <text x={pos.x + 30} y={pos.y - 15} fill="#f87171" fontSize="16">✗</text>
-                        )}
-                      </g>
-                    )
-                  })}
-                </svg>
-              </div>
+          ) : (
+            <div className="text-slate-600 text-center font-mono text-sm italic">
+              Call stack empty
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Call Stack & Explanation Row */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Call Stack */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-slate-300 font-mono text-sm">CALL STACK</span>
-                  <span className="text-slate-500 font-mono text-xs">
-                    {step.callStack.length} frame{step.callStack.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="p-4 min-h-[180px] flex flex-col justify-end">
-                  {step.callStack.length > 0 ? (
-                    <div className="space-y-2">
-                      {[...step.callStack].reverse().map((frame, idx) => (
-                        <div
-                          key={idx}
-                          className={`stack-enter px-3 py-2 rounded-lg font-mono text-sm border transition-all ${
-                            idx === 0
-                              ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
-                              : 'bg-slate-800 border-slate-600 text-slate-400'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span>valid({frame.nodeVal}, {frame.min}, {frame.max})</span>
-                            {idx === 0 && <span className="text-xs text-slate-500">← current</span>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-slate-600 text-center font-mono text-sm italic">
-                      Call stack empty
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Explanation */}
-              <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/50 rounded-xl border border-cyan-500/20 overflow-hidden">
-                <div className="px-4 py-3 bg-cyan-500/5 border-b border-cyan-500/20">
-                  <span className="text-cyan-400 font-mono text-sm">CURRENT OPERATION</span>
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="text-white font-display text-lg">
-                    {step.description}
-                  </div>
-                  <div className="text-slate-400 text-sm leading-relaxed border-l-2 border-cyan-500/30 pl-3">
-                    {step.insight}
-                  </div>
-
-                  {step.phase === 'complete' && (
-                    <div className={`mt-4 p-4 rounded-lg text-center border ${
-                      step.returnValue
-                        ? 'bg-green-500/10 border-green-500/30'
-                        : 'bg-red-500/10 border-red-500/30'
-                    }`}>
-                      <div className={`font-display font-bold text-lg ${
-                        step.returnValue ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {step.returnValue ? 'VALID BST' : 'INVALID BST'}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+      {/* Completion Status */}
+      {step.phase === 'complete' && (
+        <div className={`rounded-xl border p-4 text-center ${
+          step.returnValue
+            ? 'bg-green-500/10 border-green-500/30'
+            : 'bg-red-500/10 border-red-500/30'
+        }`}>
+          <div className={`font-display font-bold text-lg ${
+            step.returnValue ? 'text-green-400' : 'text-red-400'
+          }`}>
+            {step.returnValue ? 'VALID BST' : 'INVALID BST'}
           </div>
         </div>
+      )}
+    </>
+  )
 
-        {/* Algorithm Summary */}
-        <div className="mt-8 bg-slate-900/50 rounded-xl border border-slate-700 p-6">
-          <h2 className="font-display text-lg font-semibold text-cyan-400 mb-4">ALGORITHM OVERVIEW</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">APPROACH</div>
-              <p className="text-slate-400 text-sm">
-                Track valid range (min, max) for each node. Left children update max, right children update min.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">TIME COMPLEXITY</div>
-              <p className="text-slate-400 text-sm">
-                <span className="text-cyan-400 font-mono">O(n)</span> - Visit each node exactly once.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">SPACE COMPLEXITY</div>
-              <p className="text-slate-400 text-sm">
-                <span className="text-cyan-400 font-mono">O(h)</span> - Recursion depth equals tree height.
-              </p>
-            </div>
-          </div>
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Overview</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-orange-400 font-mono mb-1">Approach</h4>
+          <p className="text-slate-400">Track valid range (min, max) for each node. Left children update max, right children update min.</p>
         </div>
-
-          {/* Keyboard shortcuts */}
-          <div className="mt-6 text-center text-slate-600 font-mono text-xs">
-            KEYBOARD: ← Previous | → Next | Space Play/Pause
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n)</span>
+            <p className="text-slate-500 text-xs mt-1">Visit each node once</p>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(h)</span>
+            <p className="text-slate-500 text-xs mt-1">Recursion depth = tree height</p>
           </div>
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '98',
+        title: 'Validate Binary Search Tree',
+        difficulty: 'medium',
+        tags: ['Tree', 'DFS', 'BST'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="validate_bst.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

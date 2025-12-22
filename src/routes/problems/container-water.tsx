@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/container-water')({
   component: ContainerWaterVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def maxArea(self, height: List[int]) -> int:' },
   { num: 3, code: '        max_area = 0' },
@@ -26,43 +28,37 @@ const CODE_LINES = [
   { num: 18, code: '        return max_area' },
 ]
 
-interface TestCase {
-  id: number
-  name: string
-  height: number[]
-  expected: number
-  explanation: string
-}
+const PROBLEM_DESCRIPTION = `You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
 
-const TEST_CASES: TestCase[] = [
+Find two lines that together with the x-axis form a container, such that the container contains the most water.
+
+Return the maximum amount of water a container can store.
+
+Notice that you may not slant the container.`
+
+const EXAMPLES: Array<Example> = [
   {
-    id: 1,
-    name: 'Main Example',
-    height: [1, 8, 6, 2, 5, 4, 8, 3, 7],
-    expected: 49,
-    explanation: 'Lines at index 1 (height 8) and index 8 (height 7), area = 7 × 7 = 49',
+    input: 'height = [1,8,6,2,5,4,8,3,7]',
+    output: '49',
+    explanation: 'The above vertical lines are represented by array [1,8,6,2,5,4,8,3,7]. In this case, the max area of water (blue section) the container can contain is 49.',
   },
   {
-    id: 2,
-    name: 'Simple Case',
-    height: [1, 1],
-    expected: 1,
-    explanation: 'Only two lines, area = 1 × 1 = 1',
+    input: 'height = [1,1]',
+    output: '1',
   },
-  {
-    id: 3,
-    name: 'Symmetric',
-    height: [4, 3, 2, 1, 4],
-    expected: 16,
-    explanation: 'First and last lines, area = 4 × 4 = 16',
-  },
+]
+
+const CONSTRAINTS = [
+  'n == height.length',
+  '2 <= n <= 10^5',
+  '0 <= height[i] <= 10^4',
 ]
 
 interface Step {
   lineNumber: number
   description: string
   insight: string
-  height: number[]
+  height: Array<number>
   left: number
   right: number
   maxArea: number
@@ -77,8 +73,44 @@ interface Step {
   bestRight: number | null
 }
 
-function generateSteps(height: number[]): Step[] {
-  const steps: Step[] = []
+interface TestCaseData {
+  height: Array<number>
+  expected: number
+  explanation: string
+}
+
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  {
+    id: 1,
+    label: 'Main Example',
+    data: {
+      height: [1, 8, 6, 2, 5, 4, 8, 3, 7],
+      expected: 49,
+      explanation: 'Lines at index 1 (height 8) and index 8 (height 7), area = 7 × 7 = 49',
+    },
+  },
+  {
+    id: 2,
+    label: 'Simple Case',
+    data: {
+      height: [1, 1],
+      expected: 1,
+      explanation: 'Only two lines, area = 1 × 1 = 1',
+    },
+  },
+  {
+    id: 3,
+    label: 'Symmetric',
+    data: {
+      height: [4, 3, 2, 1, 4],
+      expected: 16,
+      explanation: 'First and last lines, area = 4 × 4 = 16',
+    },
+  },
+]
+
+function generateSteps(height: Array<number>): Array<Step> {
+  const steps: Array<Step> = []
   let bestLeft: number | null = null
   let bestRight: number | null = null
 
@@ -386,34 +418,23 @@ function generateSteps(height: number[]): Step[] {
 function ContainerWaterVisualization() {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedTestCase, setSelectedTestCase] = useState(0)
-  const [showTestCase, setShowTestCase] = useState(false)
 
   const testCase = TEST_CASES[selectedTestCase]
-  const steps = useMemo(() => generateSteps(testCase.height), [selectedTestCase])
+  const steps = useMemo(() => generateSteps(testCase.data.height), [testCase.data.height])
   const step = steps[currentStep]
 
-  const handlePrevious = () => setCurrentStep((s) => Math.max(0, s - 1))
-  const handleNext = () => setCurrentStep((s) => Math.min(steps.length - 1, s + 1))
-  const handleReset = () => setCurrentStep(0)
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
+  }
 
   const maxHeight = Math.max(...step.height)
   const barWidth = 100 / step.height.length
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100 font-mono">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .font-code { font-family: 'IBM Plex Mono', monospace; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
         .glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
         .glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.4); }
         .glow-green { box-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
@@ -435,338 +456,215 @@ function ContainerWaterVisualization() {
         .animate-new-max {
           animation: new-max 0.5s ease-out;
         }
-
-        @keyframes slide-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
+      {/* Bar Chart Container */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <div className="text-slate-400 text-sm font-display mb-4">Container Visualization</div>
+
+        <div className="relative h-48 flex items-end justify-center gap-1">
+          {/* Water fill */}
+          {step.currentHeight > 0 && step.left < step.right && (
+            <div
+              className="absolute bg-blue-500/30 border border-blue-400/50 rounded animate-pulse-water transition-all duration-300"
+              style={{
+                left: `${(step.left + 0.5) * barWidth}%`,
+                right: `${(step.height.length - step.right - 0.5) * barWidth}%`,
+                height: `${(step.currentHeight / maxHeight) * 100}%`,
+                bottom: 0,
+              }}
+            />
+          )}
+
+          {/* Bars */}
+          {step.height.map((h, i) => {
+            const isLeft = i === step.left
+            const isRight = i === step.right
+            const isBestLeft = i === step.bestLeft
+            const isBestRight = i === step.bestRight
+            const isOutside = i < step.left || i > step.right
+
+            let barColor = 'bg-slate-600'
+            let glowClass = ''
+            let borderColor = 'border-slate-500'
+
+            if (step.phase === 'complete' && (isBestLeft || isBestRight)) {
+              barColor = 'bg-emerald-500'
+              borderColor = 'border-emerald-400'
+              glowClass = 'glow-green'
+            } else if (isLeft && step.highlightLeft) {
+              barColor = 'bg-cyan-500'
+              borderColor = 'border-cyan-400'
+              glowClass = 'glow-cyan'
+            } else if (isRight && step.highlightRight) {
+              barColor = 'bg-orange-500'
+              borderColor = 'border-orange-400'
+              glowClass = 'glow-orange'
+            } else if (isOutside) {
+              barColor = 'bg-slate-700/50'
+              borderColor = 'border-slate-600/50'
+            }
+
+            return (
+              <div
+                key={i}
+                className="flex flex-col items-center"
+                style={{ width: `${barWidth - 1}%` }}
               >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#11</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Container With Most Water
-                </h1>
-                <div className="flex gap-2">
-                  {['Array', 'Two Pointers', 'Greedy'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                <div
+                  className={`w-full rounded-t border-2 ${barColor} ${borderColor} ${glowClass} transition-all duration-300`}
+                  style={{ height: `${(h / maxHeight) * 100}%`, minHeight: '4px' }}
+                />
+                <span className="text-[10px] text-slate-500 mt-1">{i}</span>
+                <span className="text-[10px] text-slate-400">{h}</span>
+                {isLeft && step.highlightLeft && (
+                  <span className="text-[9px] text-cyan-400 font-bold">L</span>
+                )}
+                {isRight && step.highlightRight && (
+                  <span className="text-[9px] text-orange-400 font-bold">R</span>
+                )}
               </div>
-            </div>
-          </div>
-        {/* Test Case Selector */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <span className="text-slate-400 text-sm font-display">Test Case:</span>
-            <div className="flex gap-2">
-              {TEST_CASES.map((tc, i) => (
-                <button
-                  key={tc.id}
-                  onClick={() => {
-                    setSelectedTestCase(i)
-                    setCurrentStep(0)
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-display transition-all ${
-                    selectedTestCase === i
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
-                      : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  {tc.name}
-                </button>
-              ))}
-            </div>
-          </div>
+            )
+          })}
+        </div>
+      </div>
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowTestCase(!showTestCase)}
-              className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showTestCase ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Show Test Case Details
-            </button>
+      {/* Area Calculation */}
+      {step.currentArea > 0 && (
+        <div
+          className={`bg-slate-800/50 rounded-xl border p-4 transition-all duration-300 ${
+            step.newMaxFound ? 'border-emerald-500/50 glow-green animate-new-max' : 'border-slate-700'
+          }`}
+        >
+          <div className="text-slate-400 text-sm font-display mb-2">Area Calculation</div>
+          <div className="font-code text-center">
+            <span className="text-slate-400">area = </span>
+            <span className="text-cyan-300">width</span>
+            <span className="text-slate-400"> × </span>
+            <span className="text-orange-300">height</span>
           </div>
-
-          {showTestCase && (
-            <div className="mt-3 p-4 bg-slate-900/70 rounded-lg border border-slate-700 animate-slide-in">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-slate-500">Input:</span>
-                  <div className="font-code text-cyan-300 mt-1">height = [{testCase.height.join(', ')}]</div>
-                </div>
-                <div>
-                  <span className="text-slate-500">Expected Output:</span>
-                  <div className="font-code text-emerald-300 mt-1">{testCase.expected}</div>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-slate-700">
-                <span className="text-slate-500 text-sm">Explanation:</span>
-                <p className="text-slate-300 text-sm mt-1">{testCase.explanation}</p>
-              </div>
-            </div>
+          <div className="font-code text-center text-lg mt-2">
+            <span className="text-emerald-300">{step.currentArea}</span>
+            <span className="text-slate-500"> = </span>
+            <span className="text-cyan-300">{step.currentWidth}</span>
+            <span className="text-slate-500"> × </span>
+            <span className="text-orange-300">{step.currentHeight}</span>
+          </div>
+          {step.newMaxFound && (
+            <div className="text-center text-emerald-400 text-sm mt-2 font-display">New Maximum Found!</div>
           )}
         </div>
+      )}
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50">
-              <span className="text-slate-500 font-mono text-xs">container_water.py</span>
-            </div>
-            <div className="p-4 font-code text-sm overflow-auto max-h-[500px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
-                return (
-                  <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      isActive ? 'bg-orange-500/20 border-l-2 border-orange-400 -ml-[2px]' : ''
-                    }`}
-                  >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none text-xs leading-6">
-                      {line.num}
-                    </span>
-                    <pre className={`leading-6 ${isActive ? 'text-cyan-300' : 'text-slate-300'}`}>
-                      {line.code || ' '}
-                    </pre>
-                  </div>
-                )
-              })}
-            </div>
+      {/* Variables */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <div className="text-slate-400 text-sm font-display mb-3">Variables</div>
+        <div className="grid grid-cols-4 gap-3">
+          <div
+            className={`p-3 rounded-lg border ${step.highlightLeft ? 'bg-cyan-500/20 border-cyan-400' : 'bg-slate-800/50 border-slate-600'}`}
+          >
+            <div className="text-xs text-slate-500 mb-1">left</div>
+            <div className="font-code text-xl text-cyan-300">{step.left}</div>
           </div>
+          <div
+            className={`p-3 rounded-lg border ${step.highlightRight ? 'bg-orange-500/20 border-orange-400' : 'bg-slate-800/50 border-slate-600'}`}
+          >
+            <div className="text-xs text-slate-500 mb-1">right</div>
+            <div className="font-code text-xl text-orange-300">{step.right}</div>
+          </div>
+          <div
+            className={`p-3 rounded-lg border ${step.newMaxFound ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}
+          >
+            <div className="text-xs text-slate-500 mb-1">max_area</div>
+            <div className="font-code text-xl text-emerald-300">{step.maxArea}</div>
+          </div>
+          <div className="p-3 rounded-lg border bg-slate-800/50 border-slate-600">
+            <div className="text-xs text-slate-500 mb-1">current</div>
+            <div className="font-code text-xl text-blue-300">{step.currentArea || '-'}</div>
+          </div>
+        </div>
+      </div>
 
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Bar Chart Container */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-4">Container Visualization</div>
-
-              <div className="relative h-48 flex items-end justify-center gap-1">
-                {/* Water fill */}
-                {step.currentHeight > 0 && step.left < step.right && (
-                  <div
-                    className="absolute bg-blue-500/30 border border-blue-400/50 rounded animate-pulse-water transition-all duration-300"
-                    style={{
-                      left: `${(step.left + 0.5) * barWidth}%`,
-                      right: `${(step.height.length - step.right - 0.5) * barWidth}%`,
-                      height: `${(step.currentHeight / maxHeight) * 100}%`,
-                      bottom: 0,
-                    }}
-                  />
-                )}
-
-                {/* Bars */}
-                {step.height.map((h, i) => {
-                  const isLeft = i === step.left
-                  const isRight = i === step.right
-                  const isBestLeft = i === step.bestLeft
-                  const isBestRight = i === step.bestRight
-                  const isOutside = i < step.left || i > step.right
-
-                  let barColor = 'bg-slate-600'
-                  let glowClass = ''
-                  let borderColor = 'border-slate-500'
-
-                  if (step.phase === 'complete' && (isBestLeft || isBestRight)) {
-                    barColor = 'bg-emerald-500'
-                    borderColor = 'border-emerald-400'
-                    glowClass = 'glow-green'
-                  } else if (isLeft && step.highlightLeft) {
-                    barColor = 'bg-cyan-500'
-                    borderColor = 'border-cyan-400'
-                    glowClass = 'glow-cyan'
-                  } else if (isRight && step.highlightRight) {
-                    barColor = 'bg-orange-500'
-                    borderColor = 'border-orange-400'
-                    glowClass = 'glow-orange'
-                  } else if (isOutside) {
-                    barColor = 'bg-slate-700/50'
-                    borderColor = 'border-slate-600/50'
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      className="flex flex-col items-center"
-                      style={{ width: `${barWidth - 1}%` }}
-                    >
-                      <div
-                        className={`w-full rounded-t border-2 ${barColor} ${borderColor} ${glowClass} transition-all duration-300`}
-                        style={{ height: `${(h / maxHeight) * 100}%`, minHeight: '4px' }}
-                      />
-                      <span className="text-[10px] text-slate-500 mt-1">{i}</span>
-                      <span className="text-[10px] text-slate-400">{h}</span>
-                      {isLeft && step.highlightLeft && (
-                        <span className="text-[9px] text-cyan-400 font-bold">L</span>
-                      )}
-                      {isRight && step.highlightRight && (
-                        <span className="text-[9px] text-orange-400 font-bold">R</span>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
+      {/* Completion */}
+      {step.phase === 'complete' && (
+        <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-
-            {/* Area Calculation */}
-            {step.currentArea > 0 && (
-              <div
-                className={`bg-slate-900/70 rounded-xl border p-4 transition-all duration-300 ${
-                  step.newMaxFound ? 'border-emerald-500/50 glow-green animate-new-max' : 'border-slate-700'
-                }`}
-              >
-                <div className="text-slate-400 text-sm font-display mb-2">Area Calculation</div>
-                <div className="font-code text-center">
-                  <span className="text-slate-400">area = </span>
-                  <span className="text-cyan-300">width</span>
-                  <span className="text-slate-400"> × </span>
-                  <span className="text-orange-300">height</span>
-                </div>
-                <div className="font-code text-center text-lg mt-2">
-                  <span className="text-emerald-300">{step.currentArea}</span>
-                  <span className="text-slate-500"> = </span>
-                  <span className="text-cyan-300">{step.currentWidth}</span>
-                  <span className="text-slate-500"> × </span>
-                  <span className="text-orange-300">{step.currentHeight}</span>
-                </div>
-                {step.newMaxFound && (
-                  <div className="text-center text-emerald-400 text-sm mt-2 font-display">New Maximum Found!</div>
-                )}
+            <div>
+              <div className="text-emerald-400 font-mono">Maximum area: {step.maxArea}</div>
+              <div className="text-slate-500 font-mono text-xs">
+                Expected: {testCase.data.expected}
               </div>
-            )}
-
-            {/* Variables */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-3">Variables</div>
-              <div className="grid grid-cols-4 gap-3">
-                <div
-                  className={`p-3 rounded-lg border ${step.highlightLeft ? 'bg-cyan-500/20 border-cyan-400' : 'bg-slate-800/50 border-slate-600'}`}
-                >
-                  <div className="text-xs text-slate-500 mb-1">left</div>
-                  <div className="font-code text-xl text-cyan-300">{step.left}</div>
-                </div>
-                <div
-                  className={`p-3 rounded-lg border ${step.highlightRight ? 'bg-orange-500/20 border-orange-400' : 'bg-slate-800/50 border-slate-600'}`}
-                >
-                  <div className="text-xs text-slate-500 mb-1">right</div>
-                  <div className="font-code text-xl text-orange-300">{step.right}</div>
-                </div>
-                <div
-                  className={`p-3 rounded-lg border ${step.newMaxFound ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}
-                >
-                  <div className="text-xs text-slate-500 mb-1">max_area</div>
-                  <div className="font-code text-xl text-emerald-300">{step.maxArea}</div>
-                </div>
-                <div className="p-3 rounded-lg border bg-slate-800/50 border-slate-600">
-                  <div className="text-xs text-slate-500 mb-1">current</div>
-                  <div className="font-code text-xl text-blue-300">{step.currentArea || '-'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step Info */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-cyan-300 font-display font-medium mb-2">{step.description}</div>
-              <div className="text-slate-400 text-sm">{step.insight}</div>
             </div>
           </div>
         </div>
+      )}
+    </>
+  )
 
-        {/* Controls */}
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors"
-          >
-            Reset
-          </button>
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 0}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <span className="text-slate-500 text-sm font-code">
-            Step {currentStep + 1} / {steps.length}
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={currentStep === steps.length - 1}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">Two Pointers Strategy</h4>
+          <p className="text-slate-400">
+            Start with maximum width (pointers at both ends). The area is limited by the shorter line,
+            so we always move the shorter pointer inward hoping to find a taller line.
+          </p>
         </div>
-
-          {/* Algorithm Insight */}
-          <div className="mt-8 bg-slate-900/70 rounded-xl border border-slate-700 p-6">
-            <h3 className="text-lg font-display font-semibold text-slate-100 mb-4">Algorithm Insight</h3>
-            <div className="grid md:grid-cols-2 gap-6 text-sm">
-              <div>
-                <h4 className="text-cyan-400 font-medium mb-2">Two Pointers Strategy</h4>
-                <p className="text-slate-400">
-                  Start with maximum width (pointers at both ends). The area is limited by the shorter line,
-                  so we always move the shorter pointer inward hoping to find a taller line.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-emerald-400 font-medium mb-2">Why Move the Shorter Side?</h4>
-                <p className="text-slate-400">
-                  Moving the taller side can only decrease or maintain area (width decreases, height still limited by shorter).
-                  Moving shorter side might find a taller line that increases area.
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-700 flex gap-6">
-              <div>
-                <span className="text-slate-500">Time:</span>
-                <span className="text-emerald-300 ml-2 font-code">O(n)</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Space:</span>
-                <span className="text-emerald-300 ml-2 font-code">O(1)</span>
-              </div>
-            </div>
+        <div>
+          <h4 className="text-emerald-400 font-mono mb-1">Why Move the Shorter Side?</h4>
+          <p className="text-slate-400">
+            Moving the taller side can only decrease or maintain area (width decreases, height still limited by shorter).
+            Moving shorter side might find a taller line that increases area.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n)</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(1)</span>
           </div>
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '11',
+        title: 'Container With Most Water',
+        difficulty: 'medium',
+        tags: ['Array', 'Two Pointers', 'Greedy'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="container_water.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

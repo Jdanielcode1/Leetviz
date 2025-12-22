@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/browser-history')({
   component: BrowserHistoryVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class BrowserHistory:' },
   { num: 2, code: '' },
   { num: 3, code: '    def __init__(self, homepage: str):' },
@@ -32,36 +34,61 @@ const CODE_LINES = [
   { num: 24, code: '        return self.history[-1]' },
 ]
 
+const PROBLEM_DESCRIPTION = `You have a browser of one tab where you start on the homepage and you can visit another url, get back in the history number of steps or move forward in the history number of steps.
+
+Implement the BrowserHistory class:
+
+- BrowserHistory(string homepage) Initializes the object with the homepage of the browser.
+- void visit(string url) Visits url from the current page. It clears up all the forward history.
+- string back(int steps) Move steps back in history. If you can only return x steps in the history and steps > x, you will return only x steps. Return the current url after moving back in history at most steps.
+- string forward(int steps) Move steps forward in history. If you can only forward x steps in the history and steps > x, you will forward only x steps. Return the current url after forwarding in history at most steps.`
+
+const EXAMPLES: Array<Example> = [
+  {
+    input: 'browserHistory = BrowserHistory("leetcode.com")\nbrowserHistory.visit("google.com")\nbrowserHistory.visit("facebook.com")\nbrowserHistory.visit("youtube.com")\nbrowserHistory.back(1)\nbrowserHistory.back(1)\nbrowserHistory.forward(1)\nbrowserHistory.visit("linkedin.com")\nbrowserHistory.forward(2)\nbrowserHistory.back(2)\nbrowserHistory.back(7)',
+    output: 'null\nnull\nnull\nnull\n"facebook.com"\n"google.com"\n"facebook.com"\nnull\n"linkedin.com"\n"google.com"\n"leetcode.com"',
+    explanation: 'BrowserHistory browserHistory = new BrowserHistory("leetcode.com");\nbrowserHistory.visit("google.com");       // You are in "leetcode.com". Visit "google.com"\nbrowserHistory.visit("facebook.com");     // You are in "google.com". Visit "facebook.com"\nbrowserHistory.visit("youtube.com");      // You are in "facebook.com". Visit "youtube.com"\nbrowserHistory.back(1);                   // You are in "youtube.com", move back to "facebook.com" return "facebook.com"\nbrowserHistory.back(1);                   // You are in "facebook.com", move back to "google.com" return "google.com"\nbrowserHistory.forward(1);                // You are in "google.com", move forward to "facebook.com" return "facebook.com"\nbrowserHistory.visit("linkedin.com");     // You are in "facebook.com". Visit "linkedin.com"\nbrowserHistory.forward(2);                // You are in "linkedin.com", you cannot move forward any steps.\nbrowserHistory.back(2);                   // You are in "linkedin.com", move back two steps to "facebook.com" then to "google.com". return "google.com"\nbrowserHistory.back(7);                   // You are in "google.com", you can move back only one step to "leetcode.com". return "leetcode.com"',
+  },
+]
+
+const CONSTRAINTS = [
+  '1 <= homepage.length <= 20',
+  '1 <= url.length <= 20',
+  '1 <= steps <= 100',
+  'homepage and url consist of  \'.\'  or lower case English letters.',
+  'At most 5000 calls will be made to visit, back, and forward.',
+]
+
 interface Operation {
   type: 'init' | 'visit' | 'back' | 'forward'
   arg: string | number
 }
 
-interface TestCase {
-  id: number
-  name: string
-  operations: Operation[]
-  expected: (string | null)[]
+interface TestCaseData {
+  operations: Array<Operation>
+  expected: Array<string | null>
 }
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
   {
     id: 1,
-    name: 'Full Example',
-    operations: [
-      { type: 'init', arg: 'leetcode.com' },
-      { type: 'visit', arg: 'google.com' },
-      { type: 'visit', arg: 'facebook.com' },
-      { type: 'visit', arg: 'youtube.com' },
-      { type: 'back', arg: 1 },
-      { type: 'back', arg: 1 },
-      { type: 'forward', arg: 1 },
-      { type: 'visit', arg: 'linkedin.com' },
-      { type: 'forward', arg: 2 },
-      { type: 'back', arg: 2 },
-      { type: 'back', arg: 7 },
-    ],
-    expected: [null, null, null, null, 'facebook.com', 'google.com', 'facebook.com', null, 'linkedin.com', 'google.com', 'leetcode.com'],
+    label: 'Full Example',
+    data: {
+      operations: [
+        { type: 'init', arg: 'leetcode.com' },
+        { type: 'visit', arg: 'google.com' },
+        { type: 'visit', arg: 'facebook.com' },
+        { type: 'visit', arg: 'youtube.com' },
+        { type: 'back', arg: 1 },
+        { type: 'back', arg: 1 },
+        { type: 'forward', arg: 1 },
+        { type: 'visit', arg: 'linkedin.com' },
+        { type: 'forward', arg: 2 },
+        { type: 'back', arg: 2 },
+        { type: 'back', arg: 7 },
+      ],
+      expected: [null, null, null, null, 'facebook.com', 'google.com', 'facebook.com', null, 'linkedin.com', 'google.com', 'leetcode.com'],
+    },
   },
 ]
 
@@ -69,8 +96,8 @@ interface Step {
   lineNumber: number
   description: string
   insight: string
-  history: string[]
-  future: string[]
+  history: Array<string>
+  future: Array<string>
   currentUrl: string
   phase: 'init' | 'visit' | 'visit-clear' | 'back-check' | 'back-loop' | 'back-return' | 'forward-check' | 'forward-loop' | 'forward-return'
   operation: string
@@ -83,10 +110,10 @@ interface Step {
   futureCleared: boolean
 }
 
-function generateSteps(operations: Operation[]): Step[] {
-  const steps: Step[] = []
-  let history: string[] = []
-  let future: string[] = []
+function generateSteps(operations: Array<Operation>): Array<Step> {
+  const steps: Array<Step> = []
+  let history: Array<string> = []
+  let future: Array<string> = []
 
   for (const op of operations) {
     if (op.type === 'init') {
@@ -531,23 +558,16 @@ function generateSteps(operations: Operation[]): Step[] {
 }
 
 function BrowserHistoryVisualization() {
-  const [selectedTestCase, setSelectedTestCase] = useState(TEST_CASES[0])
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [selectedTestCase, setSelectedTestCase] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0)
 
-  const steps = useMemo(() => generateSteps(selectedTestCase.operations), [selectedTestCase])
-  const step = steps[currentStepIndex]
+  const testCase = TEST_CASES[selectedTestCase]
+  const steps = useMemo(() => generateSteps(testCase.data.operations), [testCase.data.operations])
+  const step = steps[currentStep]
 
-  const handlePrevious = () => {
-    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
-  }
-
-  const handleNext = () => {
-    setCurrentStepIndex((prev) => Math.min(steps.length - 1, prev + 1))
-  }
-
-  const handleTestCaseChange = (testCase: TestCase) => {
-    setSelectedTestCase(testCase)
-    setCurrentStepIndex(0)
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
   }
 
   // URL display formatting
@@ -555,8 +575,9 @@ function BrowserHistoryVisualization() {
     return url.replace('.com', '')
   }
 
-  return (
-    <div className="min-h-screen text-slate-100" style={{ backgroundColor: '#0a1628' }}>
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
         .font-mono { font-family: 'IBM Plex Mono', monospace; }
@@ -569,255 +590,175 @@ function BrowserHistoryVisualization() {
         }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#1472</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Design Browser History
-                </h1>
-                <div className="flex gap-2">
-                  {['Stack', 'Design', 'Doubly-Linked List'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(tc)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase.id === tc.id
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    {tc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50">
-              <h2 className="font-display font-semibold text-slate-200">Algorithm</h2>
-            </div>
-            <div className="p-4 font-mono text-sm overflow-auto max-h-[600px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
-                return (
-                  <div
-                    key={line.num}
-                    className={`flex transition-all duration-200 ${
-                      isActive ? 'bg-cyan-500/10 -mx-4 px-4 border-l-2 border-cyan-400' : ''
-                    }`}
-                  >
-                    <span className={`w-8 text-right mr-4 select-none ${
-                      isActive ? 'text-cyan-400' : 'text-slate-600'
-                    }`}>
-                      {line.num}
-                    </span>
-                    <pre className={`flex-1 ${isActive ? 'text-cyan-100' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </pre>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Operation Display */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-display font-semibold text-slate-300">Current Operation</h3>
-                {step.stepsRemaining !== null && step.stepsRemaining > 0 && (
-                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 text-sm font-mono">
-                    {step.stepsRemaining} steps remaining
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-2 rounded-lg font-mono text-lg ${
-                  step.operation === 'visit' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                  step.operation === 'back' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                  step.operation === 'forward' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                  'bg-slate-700/50 text-slate-300 border border-slate-600/50'
-                }`}>
-                  {step.operation}({typeof step.operationArg === 'string' ? `"${step.operationArg}"` : step.operationArg})
-                </span>
-                {step.returnValue && (
-                  <span className="text-slate-400">
-                    → returns <span className="text-cyan-400 font-mono">"{step.returnValue}"</span>
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Current Website Display */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="font-display font-semibold text-slate-300 mb-3">Current Website</h3>
-              <div className={`px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
-                step.currentUrl
-                  ? 'bg-emerald-500/10 border-emerald-500/50'
-                  : 'bg-slate-800/50 border-slate-700/50'
-              }`}>
-                <span className={`font-mono text-xl ${step.currentUrl ? 'text-emerald-400' : 'text-slate-500'}`}>
-                  {step.currentUrl || '(none)'}
-                </span>
-              </div>
-            </div>
-
-            {/* Stacks Visualization */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4 blueprint-grid">
-              <div className="grid grid-cols-2 gap-6">
-                {/* History Stack */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-display font-semibold text-red-400">History</h3>
-                    <span className="text-slate-500 text-sm font-mono">[{step.history.length}]</span>
-                  </div>
-                  <div className="border-2 border-red-500/30 rounded-lg p-3 min-h-[280px] flex flex-col-reverse gap-2 bg-red-500/5">
-                    {step.history.length === 0 ? (
-                      <div className="text-slate-600 text-sm italic text-center py-8">(empty)</div>
-                    ) : (
-                      step.history.map((url, idx) => (
-                        <div
-                          key={`${url}-${idx}`}
-                          className={`px-4 py-3 rounded-lg font-mono text-sm transition-all duration-300 ${
-                            idx === step.highlightHistoryIndex
-                              ? 'bg-red-400/30 border-2 border-red-400 text-red-200 shadow-lg shadow-red-500/20'
-                              : 'bg-red-500/10 border border-red-500/20 text-red-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>{formatUrl(url)}</span>
-                            <span className="text-red-500/50 text-xs">[{idx}]</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div className="text-center text-slate-600 text-xs mt-2">← Back</div>
-                </div>
-
-                {/* Future Stack */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-display font-semibold text-blue-400">Future</h3>
-                    <span className="text-slate-500 text-sm font-mono">[{step.future.length}]</span>
-                  </div>
-                  <div className={`border-2 rounded-lg p-3 min-h-[280px] flex flex-col-reverse gap-2 transition-all duration-300 ${
-                    step.futureCleared
-                      ? 'border-red-500/50 bg-red-500/10'
-                      : 'border-blue-500/30 bg-blue-500/5'
-                  }`}>
-                    {step.future.length === 0 ? (
-                      <div className={`text-sm italic text-center py-8 ${
-                        step.futureCleared ? 'text-red-400' : 'text-slate-600'
-                      }`}>
-                        {step.futureCleared ? 'Cleared!' : '(empty)'}
-                      </div>
-                    ) : (
-                      step.future.map((url, idx) => (
-                        <div
-                          key={`${url}-${idx}`}
-                          className={`px-4 py-3 rounded-lg font-mono text-sm transition-all duration-300 ${
-                            idx === step.highlightFutureIndex
-                              ? 'bg-blue-400/30 border-2 border-blue-400 text-blue-200 shadow-lg shadow-blue-500/20'
-                              : 'bg-blue-500/10 border border-blue-500/20 text-blue-300'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>{formatUrl(url)}</span>
-                            <span className="text-blue-500/50 text-xs">[{idx}]</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                  <div className="text-center text-slate-600 text-xs mt-2">Forward →</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Insight Panel */}
-            <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-500/20 p-4">
-              <h3 className="font-display font-semibold text-purple-300 mb-2">Insight</h3>
-              <p className="text-slate-300">{step.insight}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePrevious}
-              disabled={currentStepIndex === 0}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentStepIndex === steps.length - 1}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-cyan-600 hover:bg-cyan-500 text-white"
-            >
-              Next
-            </button>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStepIndex + 1} of {steps.length}
+      {/* Operation Display */}
+      <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display font-semibold text-slate-300">Current Operation</h3>
+          {step.stepsRemaining !== null && step.stepsRemaining > 0 && (
+            <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 text-sm font-mono">
+              {step.stepsRemaining} steps remaining
             </span>
-            <div className="w-48 h-2 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
-                style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
-              />
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={`px-3 py-2 rounded-lg font-mono text-lg ${
+            step.operation === 'visit' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+            step.operation === 'back' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+            step.operation === 'forward' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+            'bg-slate-700/50 text-slate-300 border border-slate-600/50'
+          }`}>
+            {step.operation}({typeof step.operationArg === 'string' ? `"${step.operationArg}"` : step.operationArg})
+          </span>
+          {step.returnValue && (
+            <span className="text-slate-400">
+              → returns <span className="text-cyan-400 font-mono">"{step.returnValue}"</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Current Website Display */}
+      <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
+        <h3 className="font-display font-semibold text-slate-300 mb-3">Current Website</h3>
+        <div className={`px-6 py-4 rounded-lg border-2 transition-all duration-300 ${
+          step.currentUrl
+            ? 'bg-emerald-500/10 border-emerald-500/50'
+            : 'bg-slate-800/50 border-slate-700/50'
+        }`}>
+          <span className={`font-mono text-xl ${step.currentUrl ? 'text-emerald-400' : 'text-slate-500'}`}>
+            {step.currentUrl || '(none)'}
+          </span>
+        </div>
+      </div>
+
+      {/* Stacks Visualization */}
+      <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4 blueprint-grid">
+        <div className="grid grid-cols-2 gap-6">
+          {/* History Stack */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display font-semibold text-red-400">History</h3>
+              <span className="text-slate-500 text-sm font-mono">[{step.history.length}]</span>
             </div>
+            <div className="border-2 border-red-500/30 rounded-lg p-3 min-h-[280px] flex flex-col-reverse gap-2 bg-red-500/5">
+              {step.history.length === 0 ? (
+                <div className="text-slate-600 text-sm italic text-center py-8">(empty)</div>
+              ) : (
+                step.history.map((url, idx) => (
+                  <div
+                    key={`${url}-${idx}`}
+                    className={`px-4 py-3 rounded-lg font-mono text-sm transition-all duration-300 ${
+                      idx === step.highlightHistoryIndex
+                        ? 'bg-red-400/30 border-2 border-red-400 text-red-200 shadow-lg shadow-red-500/20'
+                        : 'bg-red-500/10 border border-red-500/20 text-red-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{formatUrl(url)}</span>
+                      <span className="text-red-500/50 text-xs">[{idx}]</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="text-center text-slate-600 text-xs mt-2">← Back</div>
+          </div>
+
+          {/* Future Stack */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display font-semibold text-blue-400">Future</h3>
+              <span className="text-slate-500 text-sm font-mono">[{step.future.length}]</span>
+            </div>
+            <div className={`border-2 rounded-lg p-3 min-h-[280px] flex flex-col-reverse gap-2 transition-all duration-300 ${
+              step.futureCleared
+                ? 'border-red-500/50 bg-red-500/10'
+                : 'border-blue-500/30 bg-blue-500/5'
+            }`}>
+              {step.future.length === 0 ? (
+                <div className={`text-sm italic text-center py-8 ${
+                  step.futureCleared ? 'text-red-400' : 'text-slate-600'
+                }`}>
+                  {step.futureCleared ? 'Cleared!' : '(empty)'}
+                </div>
+              ) : (
+                step.future.map((url, idx) => (
+                  <div
+                    key={`${url}-${idx}`}
+                    className={`px-4 py-3 rounded-lg font-mono text-sm transition-all duration-300 ${
+                      idx === step.highlightFutureIndex
+                        ? 'bg-blue-400/30 border-2 border-blue-400 text-blue-200 shadow-lg shadow-blue-500/20'
+                        : 'bg-blue-500/10 border border-blue-500/20 text-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{formatUrl(url)}</span>
+                      <span className="text-blue-500/50 text-xs">[{idx}]</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="text-center text-slate-600 text-xs mt-2">Forward →</div>
           </div>
         </div>
+      </div>
+    </>
+  )
 
-        {/* Description */}
-        <div className="mt-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
-          <p className="text-slate-300 font-display">{step.description}</p>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-red-400 font-mono mb-1">History Stack</h4>
+          <p className="text-slate-400">Stores all visited pages. Current page is at the top.</p>
+        </div>
+        <div>
+          <h4 className="text-blue-400 font-mono mb-1">Future Stack</h4>
+          <p className="text-slate-400">Stores pages for forward navigation. Cleared on new visit.</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(1)</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(n)</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '1472',
+        title: 'Design Browser History',
+        difficulty: 'medium',
+        tags: ['Array', 'Design', 'Stack'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="browser_history.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

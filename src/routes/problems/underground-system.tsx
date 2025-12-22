@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/underground-system')({
   component: UndergroundSystem,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class UndergroundSystem:' },
   { num: 2, code: '    def __init__(self):' },
   { num: 3, code: '        self.checkInMap = {}  # id -> (station, time)' },
@@ -29,7 +31,33 @@ const CODE_LINES = [
 
 const PROBLEM_DESCRIPTION = `An underground railway system tracks customer travel times between different stations to calculate average travel times.
 
-Implement checkIn, checkOut, and getAverageTime operations.`
+Implement the UndergroundSystem class:
+- void checkIn(int id, string stationName, int t): A customer with ID id checks in at station stationName at time t
+- void checkOut(int id, string stationName, int t): A customer with ID id checks out at station stationName at time t
+- double getAverageTime(string startStation, string endStation): Returns the average time to travel from startStation to endStation
+
+You may assume all calls to checkIn and checkOut are consistent. A customer checks in at time t1 at some station, and then checks out at time t2 at another station. The time difference t2 - t1 is the travel time. getAverageTime is only called when there is at least one customer that has traveled from startStation to endStation.`
+
+const EXAMPLES: Array<Example> = [
+  {
+    input: '["UndergroundSystem","checkIn","checkIn","checkIn","checkOut","checkOut","checkOut","getAverageTime","getAverageTime","checkIn","getAverageTime","checkOut","getAverageTime"]\n[[],[45,"Leyton",3],[32,"Paradise",8],[27,"Leyton",10],[45,"Waterloo",15],[27,"Waterloo",20],[32,"Cambridge",22],["Paradise","Cambridge"],["Leyton","Waterloo"],[10,"Leyton",24],["Leyton","Waterloo"],[10,"Waterloo",38],["Leyton","Waterloo"]]',
+    output: '[null,null,null,null,null,null,null,14.00000,11.00000,null,11.00000,null,12.00000]',
+    explanation: 'UndergroundSystem undergroundSystem = new UndergroundSystem();\nundergroundSystem.checkIn(45, "Leyton", 3);\nundergroundSystem.checkIn(32, "Paradise", 8);\nundergroundSystem.checkIn(27, "Leyton", 10);\nundergroundSystem.checkOut(45, "Waterloo", 15); // Customer 45 "Leyton" -> "Waterloo" in 12 minutes\nundergroundSystem.checkOut(27, "Waterloo", 20); // Customer 27 "Leyton" -> "Waterloo" in 10 minutes\nundergroundSystem.checkOut(32, "Cambridge", 22); // Customer 32 "Paradise" -> "Cambridge" in 14 minutes\nundergroundSystem.getAverageTime("Paradise", "Cambridge"); // return 14.00000\nundergroundSystem.getAverageTime("Leyton", "Waterloo"); // return 11.00000\nundergroundSystem.checkIn(10, "Leyton", 24);\nundergroundSystem.getAverageTime("Leyton", "Waterloo"); // return 11.00000\nundergroundSystem.checkOut(10, "Waterloo", 38); // Customer 10 "Leyton" -> "Waterloo" in 14 minutes\nundergroundSystem.getAverageTime("Leyton", "Waterloo"); // return 12.00000',
+  },
+  {
+    input: '["UndergroundSystem","checkIn","checkOut","getAverageTime","checkIn","checkOut","getAverageTime","checkIn","checkOut","getAverageTime"]\n[[],[10,"Leyton",3],[10,"Paradise",8],["Leyton","Paradise"],[5,"Leyton",10],[5,"Paradise",16],["Leyton","Paradise"],[2,"Leyton",21],[2,"Paradise",30],["Leyton","Paradise"]]',
+    output: '[null,null,null,5.00000,null,null,5.50000,null,null,6.66667]',
+    explanation: 'UndergroundSystem undergroundSystem = new UndergroundSystem();\nundergroundSystem.checkIn(10, "Leyton", 3);\nundergroundSystem.checkOut(10, "Paradise", 8); // Customer 10 "Leyton" -> "Paradise" in 5 minutes\nundergroundSystem.getAverageTime("Leyton", "Paradise"); // return 5.00000\nundergroundSystem.checkIn(5, "Leyton", 10);\nundergroundSystem.checkOut(5, "Paradise", 16); // Customer 5 "Leyton" -> "Paradise" in 6 minutes\nundergroundSystem.getAverageTime("Leyton", "Paradise"); // return 5.50000\nundergroundSystem.checkIn(2, "Leyton", 21);\nundergroundSystem.checkOut(2, "Paradise", 30); // Customer 2 "Leyton" -> "Paradise" in 9 minutes\nundergroundSystem.getAverageTime("Leyton", "Paradise"); // return 6.66667',
+  },
+]
+
+const CONSTRAINTS = [
+  '1 <= id, t <= 10^6',
+  '1 <= stationName.length, startStation.length, endStation.length <= 10',
+  'All strings consist of uppercase and lowercase English letters and digits',
+  'There will be at most 2 * 10^4 calls in total to checkIn, checkOut, and getAverageTime',
+  'Answers within 10^-5 of the actual value will be accepted',
+]
 
 interface CheckInEntry {
   station: string
@@ -56,85 +84,59 @@ interface Step {
 
 interface Operation {
   type: 'checkIn' | 'checkOut' | 'getAverageTime'
-  args: (string | number)[]
+  args: Array<string | number>
   comment?: string
 }
 
-interface TestCase {
-  id: number
-  name: string
-  operations: Operation[]
-  expectedOutputs: (number | null)[]
-  explanation: string[]
+interface TestCaseOperations {
+  operations: Array<Operation>
+  expectedOutputs: Array<number | null>
 }
 
-const TEST_CASES: TestCase[] = [
+const TEST_CASES: Array<TestCase<TestCaseOperations>> = [
   {
     id: 1,
-    name: 'Example 1: Multiple routes',
-    operations: [
-      { type: 'checkIn', args: [45, 'Leyton', 3] },
-      { type: 'checkIn', args: [32, 'Paradise', 8] },
-      { type: 'checkIn', args: [27, 'Leyton', 10] },
-      { type: 'checkOut', args: [45, 'Waterloo', 15], comment: 'Customer 45 "Leyton" → "Waterloo" in 15-3 = 12' },
-      { type: 'checkOut', args: [27, 'Waterloo', 20], comment: 'Customer 27 "Leyton" → "Waterloo" in 20-10 = 10' },
-      { type: 'checkOut', args: [32, 'Cambridge', 22], comment: 'Customer 32 "Paradise" → "Cambridge" in 22-8 = 14' },
-      { type: 'getAverageTime', args: ['Paradise', 'Cambridge'], comment: '(14) / 1 = 14.00000' },
-      { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: '(10 + 12) / 2 = 11.00000' },
-      { type: 'checkIn', args: [10, 'Leyton', 24] },
-      { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: 'Still 11.00000 (no new trips)' },
-      { type: 'checkOut', args: [10, 'Waterloo', 38], comment: 'Customer 10 "Leyton" → "Waterloo" in 38-24 = 14' },
-      { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: '(10 + 12 + 14) / 3 = 12.00000' },
-    ],
-    expectedOutputs: [null, null, null, null, null, null, 14.0, 11.0, null, 11.0, null, 12.0],
-    explanation: [
-      'UndergroundSystem undergroundSystem = new UndergroundSystem();',
-      'undergroundSystem.checkIn(45, "Leyton", 3);',
-      'undergroundSystem.checkIn(32, "Paradise", 8);',
-      'undergroundSystem.checkIn(27, "Leyton", 10);',
-      'undergroundSystem.checkOut(45, "Waterloo", 15);  // Customer 45 "Leyton" -> "Waterloo" in 15-3 = 12',
-      'undergroundSystem.checkOut(27, "Waterloo", 20);  // Customer 27 "Leyton" -> "Waterloo" in 20-10 = 10',
-      'undergroundSystem.checkOut(32, "Cambridge", 22); // Customer 32 "Paradise" -> "Cambridge" in 22-8 = 14',
-      'undergroundSystem.getAverageTime("Paradise", "Cambridge"); // return 14.00000. One trip "Paradise" -> "Cambridge", (14) / 1 = 14',
-      'undergroundSystem.getAverageTime("Leyton", "Waterloo");    // return 11.00000. Two trips "Leyton" -> "Waterloo", (10 + 12) / 2 = 11',
-      'undergroundSystem.checkIn(10, "Leyton", 24);',
-      'undergroundSystem.getAverageTime("Leyton", "Waterloo");    // return 11.00000',
-      'undergroundSystem.checkOut(10, "Waterloo", 38);  // Customer 10 "Leyton" -> "Waterloo" in 38-24 = 14',
-      'undergroundSystem.getAverageTime("Leyton", "Waterloo");    // return 12.00000. Three trips "Leyton" -> "Waterloo", (10 + 12 + 14) / 3 = 12',
-    ],
+    label: 'Example 1: Multiple routes',
+    data: {
+      operations: [
+        { type: 'checkIn', args: [45, 'Leyton', 3] },
+        { type: 'checkIn', args: [32, 'Paradise', 8] },
+        { type: 'checkIn', args: [27, 'Leyton', 10] },
+        { type: 'checkOut', args: [45, 'Waterloo', 15], comment: 'Customer 45 "Leyton" → "Waterloo" in 15-3 = 12' },
+        { type: 'checkOut', args: [27, 'Waterloo', 20], comment: 'Customer 27 "Leyton" → "Waterloo" in 20-10 = 10' },
+        { type: 'checkOut', args: [32, 'Cambridge', 22], comment: 'Customer 32 "Paradise" → "Cambridge" in 22-8 = 14' },
+        { type: 'getAverageTime', args: ['Paradise', 'Cambridge'], comment: '(14) / 1 = 14.00000' },
+        { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: '(10 + 12) / 2 = 11.00000' },
+        { type: 'checkIn', args: [10, 'Leyton', 24] },
+        { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: 'Still 11.00000 (no new trips)' },
+        { type: 'checkOut', args: [10, 'Waterloo', 38], comment: 'Customer 10 "Leyton" → "Waterloo" in 38-24 = 14' },
+        { type: 'getAverageTime', args: ['Leyton', 'Waterloo'], comment: '(10 + 12 + 14) / 3 = 12.00000' },
+      ],
+      expectedOutputs: [null, null, null, null, null, null, 14.0, 11.0, null, 11.0, null, 12.0],
+    },
   },
   {
     id: 2,
-    name: 'Example 2: Single route',
-    operations: [
-      { type: 'checkIn', args: [10, 'Leyton', 3] },
-      { type: 'checkOut', args: [10, 'Paradise', 8], comment: 'Customer 10 "Leyton" → "Paradise" in 8-3 = 5' },
-      { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5) / 1 = 5.00000' },
-      { type: 'checkIn', args: [5, 'Leyton', 10] },
-      { type: 'checkOut', args: [5, 'Paradise', 16], comment: 'Customer 5 "Leyton" → "Paradise" in 16-10 = 6' },
-      { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5 + 6) / 2 = 5.50000' },
-      { type: 'checkIn', args: [2, 'Leyton', 21] },
-      { type: 'checkOut', args: [2, 'Paradise', 30], comment: 'Customer 2 "Leyton" → "Paradise" in 30-21 = 9' },
-      { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5 + 6 + 9) / 3 = 6.66667' },
-    ],
-    expectedOutputs: [null, null, 5.0, null, null, 5.5, null, null, 6.66667],
-    explanation: [
-      'UndergroundSystem undergroundSystem = new UndergroundSystem();',
-      'undergroundSystem.checkIn(10, "Leyton", 3);',
-      'undergroundSystem.checkOut(10, "Paradise", 8); // Customer 10 "Leyton" -> "Paradise" in 8-3 = 5',
-      'undergroundSystem.getAverageTime("Leyton", "Paradise"); // return 5.00000, (5) / 1 = 5',
-      'undergroundSystem.checkIn(5, "Leyton", 10);',
-      'undergroundSystem.checkOut(5, "Paradise", 16); // Customer 5 "Leyton" -> "Paradise" in 16-10 = 6',
-      'undergroundSystem.getAverageTime("Leyton", "Paradise"); // return 5.50000, (5 + 6) / 2 = 5.5',
-      'undergroundSystem.checkIn(2, "Leyton", 21);',
-      'undergroundSystem.checkOut(2, "Paradise", 30); // Customer 2 "Leyton" -> "Paradise" in 30-21 = 9',
-      'undergroundSystem.getAverageTime("Leyton", "Paradise"); // return 6.66667, (5 + 6 + 9) / 3 = 6.66667',
-    ],
+    label: 'Example 2: Single route',
+    data: {
+      operations: [
+        { type: 'checkIn', args: [10, 'Leyton', 3] },
+        { type: 'checkOut', args: [10, 'Paradise', 8], comment: 'Customer 10 "Leyton" → "Paradise" in 8-3 = 5' },
+        { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5) / 1 = 5.00000' },
+        { type: 'checkIn', args: [5, 'Leyton', 10] },
+        { type: 'checkOut', args: [5, 'Paradise', 16], comment: 'Customer 5 "Leyton" → "Paradise" in 16-10 = 6' },
+        { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5 + 6) / 2 = 5.50000' },
+        { type: 'checkIn', args: [2, 'Leyton', 21] },
+        { type: 'checkOut', args: [2, 'Paradise', 30], comment: 'Customer 2 "Leyton" → "Paradise" in 30-21 = 9' },
+        { type: 'getAverageTime', args: ['Leyton', 'Paradise'], comment: '(5 + 6 + 9) / 3 = 6.66667' },
+      ],
+      expectedOutputs: [null, null, 5.0, null, null, 5.5, null, null, 6.66667],
+    },
   },
 ]
 
-function generateSteps(operations: Operation[]): Step[] {
-  const steps: Step[] = []
+function generateSteps(operations: Array<Operation>): Array<Step> {
+  const steps: Array<Step> = []
   const checkInMap = new Map<number, CheckInEntry>()
   const totalMap = new Map<string, RouteStats>()
 
@@ -287,10 +289,9 @@ function generateSteps(operations: Operation[]): Step[] {
 function UndergroundSystem() {
   const [selectedTestCase, setSelectedTestCase] = useState(0)
   const [currentStep, setCurrentStep] = useState(0)
-  const [showTestCase, setShowTestCase] = useState(false)
 
   const testCase = TEST_CASES[selectedTestCase]
-  const steps = useMemo(() => generateSteps(testCase.operations), [testCase.operations])
+  const steps = useMemo(() => generateSteps(testCase.data.operations), [testCase.data.operations])
   const step = steps[currentStep]
 
   const handleTestCaseChange = (index: number) => {
@@ -301,405 +302,187 @@ function UndergroundSystem() {
   const checkInArray = Array.from(step.checkInMap.entries())
   const totalArray = Array.from(step.totalMap.entries())
 
-  // Generate input/output arrays for display
-  const inputMethods = useMemo(() => {
-    const methods = ['UndergroundSystem', ...testCase.operations.map(op => op.type)]
-    return JSON.stringify(methods)
-  }, [testCase.operations])
-
-  const inputArgs = useMemo(() => {
-    const args = [[], ...testCase.operations.map(op => op.args)]
-    return JSON.stringify(args)
-  }, [testCase.operations])
-
-  const outputArray = useMemo(() => {
-    const outputs = [null, ...testCase.expectedOutputs]
-    return JSON.stringify(outputs.map(v => v === null ? null : Number(v.toFixed(5))))
-  }, [testCase.expectedOutputs])
-
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .font-display { font-family: 'Outfit', sans-serif; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
-        .code-highlight {
-          background: linear-gradient(90deg, rgba(251, 146, 60, 0.15) 0%, transparent 100%);
-          border-left: 2px solid #fb923c;
-        }
-
-        .glow-cyan {
-          box-shadow: 0 0 15px rgba(34, 211, 238, 0.4);
-        }
-
-        .glow-orange {
-          box-shadow: 0 0 15px rgba(251, 146, 60, 0.4);
-        }
-
-        .glow-green {
-          box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-        }
-
-        .glow-purple {
-          box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
-        }
+        .glow-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.4); }
+        .glow-orange { box-shadow: 0 0 15px rgba(251, 146, 60, 0.4); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+        .glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
+      {/* Current Operation */}
+      <div className={`rounded-xl border p-4 ${
+        step.operation === 'checkIn'
+          ? 'bg-cyan-500/10 border-cyan-500/30'
+          : step.operation === 'checkOut'
+          ? 'bg-orange-500/10 border-orange-500/30'
+          : step.operation === 'getAverageTime'
+          ? 'bg-purple-500/10 border-purple-500/30'
+          : 'bg-slate-800/50 border-slate-700'
+      }`}>
+        <div className="text-sm font-mono mb-2 text-slate-400">CURRENT OPERATION</div>
+        <div className="font-mono text-lg">
+          {step.operation === 'checkIn' && <span className="text-cyan-400">checkIn</span>}
+          {step.operation === 'checkOut' && <span className="text-orange-400">checkOut</span>}
+          {step.operation === 'getAverageTime' && <span className="text-purple-400">getAverageTime</span>}
+          {step.operation === 'init' && <span className="text-slate-400">__init__</span>}
+        </div>
+        {step.travelTime !== null && (
+          <div className="mt-2 text-emerald-400 font-mono">
+            Travel time: {step.travelTime} minutes
+          </div>
+        )}
+        {step.result !== null && (
+          <div className="mt-2 text-emerald-400 font-mono text-xl glow-green">
+            Result: {step.result.toFixed(5)}
+          </div>
+        )}
+      </div>
 
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#1396</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
+      {/* checkInMap */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-cyan-400 font-mono text-sm">checkInMap</span>
+          <span className="text-slate-500 font-mono text-xs">
+            {checkInArray.length} active passenger(s)
+          </span>
+        </div>
+        <div className="p-4">
+          {checkInArray.length === 0 ? (
+            <div className="text-center text-slate-600 font-mono text-sm">No active check-ins</div>
+          ) : (
+            <div className="space-y-2">
+              {checkInArray.map(([id, entry]) => (
+                <div
+                  key={id}
+                  className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
+                    step.highlightCheckIn === id
+                      ? 'bg-cyan-500/20 border border-cyan-500/50 glow-cyan'
+                      : 'bg-slate-800/50 border border-slate-700'
+                  }`}
+                >
+                  <div className="font-mono">
+                    <span className="text-slate-500">ID:</span>
+                    <span className="text-cyan-300 ml-2">{id}</span>
+                  </div>
+                  <div className="font-mono text-sm">
+                    <span className="text-orange-300">{entry.station}</span>
+                    <span className="text-slate-500 mx-2">@</span>
+                    <span className="text-slate-300">t={entry.time}</span>
+                  </div>
                 </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Design Underground System
-                </h1>
-                <div className="flex gap-2">
-                  {['Hash Table', 'Design', 'String'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* totalMap */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-purple-400 font-mono text-sm">totalMap</span>
+          <span className="text-slate-500 font-mono text-xs">
+            {totalArray.length} route(s)
+          </span>
+        </div>
+        <div className="p-4">
+          {totalArray.length === 0 ? (
+            <div className="text-center text-slate-600 font-mono text-sm">No route data yet</div>
+          ) : (
+            <div className="space-y-2">
+              {totalArray.map(([route, stats]) => (
+                <div
+                  key={route}
+                  className={`p-3 rounded-lg transition-all duration-300 ${
+                    step.highlightRoute === route
+                      ? 'bg-purple-500/20 border border-purple-500/50 glow-purple'
+                      : 'bg-slate-800/50 border border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-purple-300">{route}</span>
+                    <span className="font-mono text-emerald-400">
+                      avg: {(stats.totalTime / stats.count).toFixed(2)}
                     </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Problem Description */}
-          <div className="mb-8 p-4 bg-slate-900/50 rounded-lg border border-slate-700">
-            <p className="text-slate-400 font-mono text-sm whitespace-pre-line">{PROBLEM_DESCRIPTION}</p>
-          </div>
-
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc, idx) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(idx)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase === idx
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    {tc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Show Test Case Toggle */}
-          <div className="mb-6">
-            <button
-              onClick={() => setShowTestCase(!showTestCase)}
-              className="flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors font-mono text-sm"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showTestCase ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              {showTestCase ? 'Hide' : 'Show'} Test Case Details
-            </button>
-
-            {showTestCase && (
-              <div className="mt-4 bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="p-4 space-y-4">
-                  {/* Input */}
-                  <div>
-                    <div className="text-cyan-400 font-mono text-sm mb-2">Input</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      <pre className="text-slate-300 font-mono text-xs whitespace-pre-wrap break-all">{inputMethods}</pre>
-                      <pre className="text-slate-300 font-mono text-xs whitespace-pre-wrap break-all mt-1">{inputArgs}</pre>
-                    </div>
                   </div>
-
-                  {/* Output */}
-                  <div>
-                    <div className="text-emerald-400 font-mono text-sm mb-2">Output</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      <pre className="text-slate-300 font-mono text-xs whitespace-pre-wrap break-all">{outputArray}</pre>
-                    </div>
-                  </div>
-
-                  {/* Explanation */}
-                  <div>
-                    <div className="text-orange-400 font-mono text-sm mb-2">Explanation</div>
-                    <div className="bg-slate-950 rounded-lg p-3 overflow-x-auto">
-                      {testCase.explanation.map((line, idx) => (
-                        <pre key={idx} className="text-slate-400 font-mono text-xs">{line}</pre>
-                      ))}
-                    </div>
+                  <div className="flex gap-4 text-sm font-mono text-slate-400">
+                    <span>Total: {stats.totalTime} mins</span>
+                    <span>Trips: {stats.count}</span>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setCurrentStep(0)}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              Reset
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm border border-slate-700"
-            >
-              ← Prev
-            </button>
-            <button
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-              disabled={currentStep === steps.length - 1}
-              className="px-4 py-2 rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
-            >
-              Next →
-            </button>
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStep + 1} / {steps.length}
-            </span>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-8 h-1 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-            />
-          </div>
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* Code Panel */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                </div>
-                <span className="text-slate-500 font-mono text-xs">underground_system.py</span>
-              </div>
-              <div className="p-4 font-mono text-sm overflow-x-auto">
-                {CODE_LINES.map((line) => (
-                  <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      step.lineNumber === line.num ? 'code-highlight' : ''
-                    }`}
-                  >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none flex-shrink-0">
-                      {line.num}
-                    </span>
-                    <code className={`whitespace-pre ${step.lineNumber === line.num ? 'text-cyan-300' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </code>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
 
-            {/* Visualization Panel */}
-            <div className="space-y-6">
-              {/* Current Operation */}
-              <div className={`rounded-xl border p-4 ${
-                step.operation === 'checkIn'
-                  ? 'bg-cyan-500/10 border-cyan-500/30'
-                  : step.operation === 'checkOut'
-                  ? 'bg-orange-500/10 border-orange-500/30'
-                  : step.operation === 'getAverageTime'
-                  ? 'bg-purple-500/10 border-purple-500/30'
-                  : 'bg-slate-800/50 border-slate-700'
-              }`}>
-                <div className="text-sm font-mono mb-2 text-slate-400">CURRENT OPERATION</div>
-                <div className="font-mono text-lg">
-                  {step.operation === 'checkIn' && <span className="text-cyan-400">checkIn</span>}
-                  {step.operation === 'checkOut' && <span className="text-orange-400">checkOut</span>}
-                  {step.operation === 'getAverageTime' && <span className="text-purple-400">getAverageTime</span>}
-                  {step.operation === 'init' && <span className="text-slate-400">__init__</span>}
-                </div>
-                {step.travelTime !== null && (
-                  <div className="mt-2 text-emerald-400 font-mono">
-                    Travel time: {step.travelTime} minutes
-                  </div>
-                )}
-                {step.result !== null && (
-                  <div className="mt-2 text-emerald-400 font-mono text-xl glow-green">
-                    Result: {step.result.toFixed(5)}
-                  </div>
-                )}
-              </div>
-
-              {/* checkInMap */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-cyan-400 font-mono text-sm">checkInMap</span>
-                  <span className="text-slate-500 font-mono text-xs">
-                    {checkInArray.length} active passenger(s)
-                  </span>
-                </div>
-                <div className="p-4">
-                  {checkInArray.length === 0 ? (
-                    <div className="text-center text-slate-600 font-mono py-2">No active check-ins</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {checkInArray.map(([id, entry]) => (
-                        <div
-                          key={id}
-                          className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                            step.highlightCheckIn === id
-                              ? 'bg-cyan-500/20 border border-cyan-500/50 glow-cyan'
-                              : 'bg-slate-800/50 border border-slate-700'
-                          }`}
-                        >
-                          <div className="font-mono">
-                            <span className="text-slate-500">ID:</span>
-                            <span className="text-cyan-300 ml-2">{id}</span>
-                          </div>
-                          <div className="font-mono text-sm">
-                            <span className="text-orange-300">{entry.station}</span>
-                            <span className="text-slate-500 mx-2">@</span>
-                            <span className="text-slate-300">t={entry.time}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* totalMap */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-purple-400 font-mono text-sm">totalMap</span>
-                  <span className="text-slate-500 font-mono text-xs">
-                    {totalArray.length} route(s)
-                  </span>
-                </div>
-                <div className="p-4">
-                  {totalArray.length === 0 ? (
-                    <div className="text-center text-slate-600 font-mono py-2">No route data yet</div>
-                  ) : (
-                    <div className="space-y-2">
-                      {totalArray.map(([route, stats]) => (
-                        <div
-                          key={route}
-                          className={`p-3 rounded-lg transition-all duration-300 ${
-                            step.highlightRoute === route
-                              ? 'bg-purple-500/20 border border-purple-500/50 glow-purple'
-                              : 'bg-slate-800/50 border border-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-mono text-purple-300">{route}</span>
-                            <span className="font-mono text-emerald-400">
-                              avg: {(stats.totalTime / stats.count).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex gap-4 text-sm font-mono text-slate-400">
-                            <span>Total: {stats.totalTime} mins</span>
-                            <span>Trips: {stats.count}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Insight Panel */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700">
-                  <span className="text-slate-300 font-mono text-sm">CURRENT STEP</span>
-                </div>
-                <div className="p-6">
-                  <p className="text-slate-200 font-display text-lg mb-3">{step.description}</p>
-                  <p className="text-slate-400 font-display">{step.insight}</p>
-                </div>
-              </div>
-            </div>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">checkInMap</h4>
+          <p className="text-slate-400">
+            Maps customer ID to their check-in station and time. Allows O(1) lookup when they check out.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-purple-400 font-mono mb-1">totalMap</h4>
+          <p className="text-slate-400">
+            Maps (start, end) route to cumulative time and trip count. Enables O(1) average calculation.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-orange-400 font-mono mb-1">Average Calculation</h4>
+          <p className="text-slate-400">
+            Store running totals instead of individual trips. Average = totalTime / count, always O(1).
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(1)</span>
           </div>
-
-          {/* Algorithm Explanation */}
-          <div className="mt-8 bg-slate-900/50 rounded-xl border border-slate-700 p-6">
-            <h3 className="text-slate-200 font-display font-semibold text-lg mb-4">Algorithm Insight</h3>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div>
-                <h4 className="text-cyan-400 font-mono mb-2">checkInMap</h4>
-                <p className="text-slate-400">
-                  Maps customer ID to their check-in station and time.
-                  Allows O(1) lookup when they check out.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-purple-400 font-mono mb-2">totalMap</h4>
-                <p className="text-slate-400">
-                  Maps (start, end) route to cumulative time and trip count.
-                  Enables O(1) average calculation.
-                </p>
-              </div>
-              <div>
-                <h4 className="text-orange-400 font-mono mb-2">Average Calculation</h4>
-                <p className="text-slate-400">
-                  Store running totals instead of individual trips.
-                  Average = totalTime / count, always O(1).
-                </p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6 text-sm mt-4">
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-purple-400 font-mono mb-2">Time Complexity: O(1)</h4>
-                <p className="text-slate-400">
-                  All three operations are O(1) - just hashmap operations.
-                </p>
-              </div>
-              <div className="bg-slate-800/30 rounded-lg p-4">
-                <h4 className="text-pink-400 font-mono mb-2">Space Complexity: O(P + S²)</h4>
-                <p className="text-slate-400">
-                  P = passengers in transit, S² = possible station pairs (routes).
-                </p>
-              </div>
-            </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(P + S²)</span>
           </div>
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '1396',
+        title: 'Design Underground System',
+        difficulty: 'medium',
+        tags: ['Hash Table', 'Design', 'String'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="underground_system.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

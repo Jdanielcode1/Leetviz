@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/shortest-path-binary-matrix')({
   component: ShortestPathBinaryMatrixVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def shortestPathBinaryMatrix(self, grid):' },
   { num: 3, code: '        q = collections.deque([(0, 0, 1)])' },
@@ -29,62 +31,46 @@ const CODE_LINES = [
   { num: 21, code: '        return -1' },
 ]
 
-interface TestCase {
-  id: number
-  name: string
-  grid: number[][]
-  expected: number
-}
+const PROBLEM_DESCRIPTION = `Given an n x n binary matrix grid, return the length of the shortest clear path in the matrix. If there is no clear path, return -1.
 
-const TEST_CASES: TestCase[] = [
+A clear path in a binary matrix is a path from the top-left cell (i.e., (0, 0)) to the bottom-right cell (i.e., (n - 1, n - 1)) such that:
+
+• All the visited cells of the path are 0.
+• All the adjacent cells of the path are 8-directionally connected (i.e., they are different and they share an edge or a corner).
+
+The length of a clear path is the number of visited cells of this path.`
+
+const EXAMPLES: Array<Example> = [
   {
-    id: 1,
-    name: 'Diagonal Path',
-    grid: [
-      [0, 1],
-      [1, 0],
-    ],
-    expected: 2,
+    input: 'grid = [[0,1],[1,0]]',
+    output: '2',
+    explanation: 'There is one clear path from (0,0) to (1,1): (0,0) -> (1,1).',
   },
   {
-    id: 2,
-    name: 'Path Exists',
-    grid: [
-      [0, 0, 0],
-      [1, 1, 0],
-      [1, 1, 0],
-    ],
-    expected: 4,
+    input: 'grid = [[0,0,0],[1,1,0],[1,1,0]]',
+    output: '4',
+    explanation: 'There is one clear path: (0,0) -> (0,1) -> (0,2) -> (1,2) -> (2,2).',
   },
   {
-    id: 3,
-    name: 'Blocked Start',
-    grid: [
-      [1, 0, 0],
-      [1, 1, 0],
-      [1, 1, 0],
-    ],
-    expected: -1,
+    input: 'grid = [[1,0,0],[1,1,0],[1,1,0]]',
+    output: '-1',
+    explanation: 'The starting cell is blocked, so there is no path.',
   },
-  {
-    id: 4,
-    name: 'Larger Grid',
-    grid: [
-      [0, 0, 0, 0],
-      [1, 1, 0, 0],
-      [0, 0, 0, 1],
-      [0, 1, 0, 0],
-    ],
-    expected: 4,
-  },
+]
+
+const CONSTRAINTS = [
+  'n == grid.length',
+  'n == grid[i].length',
+  '1 <= n <= 100',
+  'grid[i][j] is 0 or 1',
 ]
 
 interface Step {
   lineNumber: number
   description: string
   insight: string
-  grid: number[][]
-  queue: [number, number, number][]
+  grid: Array<Array<number>>
+  queue: Array<[number, number, number]>
   phase: string
   currentCell: [number, number] | null
   currentCost: number
@@ -92,21 +78,77 @@ interface Step {
   directionName: string | null
   levelSize: number | null
   levelProgress: number
-  visited: string[]
+  visited: Array<string>
   foundPath: boolean
   pathLength: number | null
 }
 
-function deepCopyGrid(grid: number[][]): number[][] {
+interface TestCaseData {
+  grid: Array<Array<number>>
+  expected: number
+}
+
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  {
+    id: 1,
+    label: 'Diagonal Path',
+    data: {
+      grid: [
+        [0, 1],
+        [1, 0],
+      ],
+      expected: 2,
+    },
+  },
+  {
+    id: 2,
+    label: 'Path Exists',
+    data: {
+      grid: [
+        [0, 0, 0],
+        [1, 1, 0],
+        [1, 1, 0],
+      ],
+      expected: 4,
+    },
+  },
+  {
+    id: 3,
+    label: 'Blocked Start',
+    data: {
+      grid: [
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 1, 0],
+      ],
+      expected: -1,
+    },
+  },
+  {
+    id: 4,
+    label: 'Larger Grid',
+    data: {
+      grid: [
+        [0, 0, 0, 0],
+        [1, 1, 0, 0],
+        [0, 0, 0, 1],
+        [0, 1, 0, 0],
+      ],
+      expected: 4,
+    },
+  },
+]
+
+function deepCopyGrid(grid: Array<Array<number>>): Array<Array<number>> {
   return grid.map(row => [...row])
 }
 
-function generateSteps(initialGrid: number[][]): Step[] {
-  const steps: Step[] = []
+function generateSteps(initialGrid: Array<Array<number>>): Array<Step> {
+  const steps: Array<Step> = []
   const grid = deepCopyGrid(initialGrid)
-  const queue: [number, number, number][] = []
+  const queue: Array<[number, number, number]> = []
   const n = grid.length
-  const visited: string[] = []
+  const visited: Array<string> = []
 
   // Line 2: Start function
   steps.push({
@@ -196,7 +238,7 @@ function generateSteps(initialGrid: number[][]): Step[] {
   grid[0][0] = 1 // Mark as visited
   visited.push('0,0')
 
-  const directions: [number, number, string][] = [
+  const directions: Array<[number, number, string]> = [
     [-1, -1, '↖ top-left'],
     [-1, 0, '↑ up'],
     [-1, 1, '↗ top-right'],
@@ -438,26 +480,19 @@ function generateSteps(initialGrid: number[][]): Step[] {
 }
 
 function ShortestPathBinaryMatrixVisualization() {
-  const [selectedTestCase, setSelectedTestCase] = useState(TEST_CASES[0])
-  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [selectedTestCase, setSelectedTestCase] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0)
 
-  const steps = useMemo(() => generateSteps(selectedTestCase.grid), [selectedTestCase])
-  const step = steps[currentStepIndex]
+  const testCase = TEST_CASES[selectedTestCase]
+  const steps = useMemo(() => generateSteps(testCase.data.grid), [testCase.data.grid])
+  const step = steps[currentStep]
 
-  const handlePrevious = () => {
-    setCurrentStepIndex((prev) => Math.max(0, prev - 1))
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
   }
 
-  const handleNext = () => {
-    setCurrentStepIndex((prev) => Math.min(steps.length - 1, prev + 1))
-  }
-
-  const handleTestCaseChange = (testCase: TestCase) => {
-    setSelectedTestCase(testCase)
-    setCurrentStepIndex(0)
-  }
-
-  const n = selectedTestCase.grid.length
+  const n = testCase.data.grid.length
 
   const getCellStyle = (row: number, col: number, _value: number) => {
     const isStart = row === 0 && col === 0
@@ -465,7 +500,7 @@ function ShortestPathBinaryMatrixVisualization() {
     const isCurrentCell = step.currentCell && step.currentCell[0] === row && step.currentCell[1] === col
     const isCheckingCell = step.checkingCell && step.checkingCell[0] === row && step.checkingCell[1] === col
     const isVisited = step.visited.includes(`${row},${col}`)
-    const originalValue = selectedTestCase.grid[row][col]
+    const originalValue = testCase.data.grid[row][col]
 
     let baseStyle = ''
     let ringStyle = ''
@@ -504,7 +539,7 @@ function ShortestPathBinaryMatrixVisualization() {
   const getCellContent = (row: number, col: number) => {
     const isStart = row === 0 && col === 0
     const isGoal = row === n - 1 && col === n - 1
-    const originalValue = selectedTestCase.grid[row][col]
+    const originalValue = testCase.data.grid[row][col]
 
     if (originalValue === 1) return '█'
     if (isStart) return 'S'
@@ -512,300 +547,189 @@ function ShortestPathBinaryMatrixVisualization() {
     return ''
   }
 
-  return (
-    <div className="min-h-screen text-slate-100" style={{ backgroundColor: '#0a1628' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap');
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-      `}</style>
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Current Cost */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
+          <div className="text-slate-400 text-sm font-display mb-1">Current Cost</div>
+          <div className="text-4xl font-bold font-mono text-cyan-400">{step.currentCost}</div>
+        </div>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
+        {/* Queue Size */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
+          <div className="text-slate-400 text-sm font-display mb-1">Queue Size</div>
+          <div className="text-4xl font-bold font-mono text-purple-400">{step.queue.length}</div>
+        </div>
 
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#1091</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
+        {/* Expected Result */}
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
+          <div className="text-slate-400 text-sm font-display mb-1">Expected</div>
+          <div className={`text-4xl font-bold font-mono ${
+            testCase.data.expected === -1 ? 'text-red-400' : 'text-emerald-400'
+          }`}>
+            {testCase.data.expected}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid Visualization */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
+        <h3 className="font-display font-semibold text-slate-300 mb-4">Grid ({n}x{n})</h3>
+        <div className="flex justify-center">
+          <div className="inline-grid gap-1" style={{
+            gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`
+          }}>
+            {step.grid.map((row, r) =>
+              row.map((_, c) => (
+                <div
+                  key={`${r}-${c}`}
+                  className={`w-14 h-14 rounded-lg border-2 flex items-center justify-center text-lg font-bold transition-all duration-300 ${getCellStyle(r, c, step.grid[r][c])}`}
+                >
+                  <span className={testCase.data.grid[r][c] === 1 ? 'text-slate-600' : 'text-slate-800'}>
+                    {getCellContent(r, c)}
                   </span>
                 </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Shortest Path in Binary Matrix
-                </h1>
-                <div className="flex gap-2">
-                  {['Array', 'BFS', 'Matrix'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Test Case Selector */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span className="text-slate-500 font-mono text-sm">TEST CASE:</span>
-              <div className="flex gap-2 flex-wrap">
-                {TEST_CASES.map((tc) => (
-                  <button
-                    key={tc.id}
-                    onClick={() => handleTestCaseChange(tc)}
-                    className={`px-4 py-2 rounded-lg font-mono text-sm transition-all ${
-                      selectedTestCase.id === tc.id
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-                        : 'bg-slate-800/50 text-slate-500 border border-slate-700 hover:border-slate-600'
-                    }`}
-                  >
-                    {tc.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50">
-              <h2 className="font-display font-semibold text-slate-200">Algorithm</h2>
-            </div>
-            <div className="p-4 font-mono text-sm overflow-auto max-h-[600px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
-                return (
-                  <div
-                    key={line.num}
-                    className={`flex transition-all duration-200 ${
-                      isActive ? 'bg-cyan-500/10 -mx-4 px-4 border-l-2 border-cyan-400' : ''
-                    }`}
-                  >
-                    <span className={`w-8 text-right mr-4 select-none ${
-                      isActive ? 'text-cyan-400' : 'text-slate-600'
-                    }`}>
-                      {line.num}
-                    </span>
-                    <pre className={`flex-1 ${isActive ? 'text-cyan-100' : 'text-slate-400'}`}>
-                      {line.code || ' '}
-                    </pre>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-4">
-              {/* Current Cost */}
-              <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4 text-center">
-                <div className="text-slate-400 text-sm font-display mb-1">Current Cost</div>
-                <div className="text-4xl font-bold font-mono text-cyan-400">{step.currentCost}</div>
-              </div>
-
-              {/* Queue Size */}
-              <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4 text-center">
-                <div className="text-slate-400 text-sm font-display mb-1">Queue Size</div>
-                <div className="text-4xl font-bold font-mono text-purple-400">{step.queue.length}</div>
-              </div>
-
-              {/* Expected Result */}
-              <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4 text-center">
-                <div className="text-slate-400 text-sm font-display mb-1">Expected</div>
-                <div className={`text-4xl font-bold font-mono ${
-                  selectedTestCase.expected === -1 ? 'text-red-400' : 'text-emerald-400'
-                }`}>
-                  {selectedTestCase.expected}
-                </div>
-              </div>
-            </div>
-
-            {/* Grid Visualization */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-6 blueprint-grid">
-              <h3 className="font-display font-semibold text-slate-300 mb-4">Grid ({n}x{n})</h3>
-              <div className="flex justify-center">
-                <div className="inline-grid gap-1" style={{
-                  gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`
-                }}>
-                  {step.grid.map((row, r) =>
-                    row.map((_, c) => (
-                      <div
-                        key={`${r}-${c}`}
-                        className={`w-14 h-14 rounded-lg border-2 flex items-center justify-center text-lg font-bold transition-all duration-300 ${getCellStyle(r, c, step.grid[r][c])}`}
-                      >
-                        <span className={selectedTestCase.grid[r][c] === 1 ? 'text-slate-600' : 'text-slate-800'}>
-                          {getCellContent(r, c)}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="flex justify-center gap-4 mt-4 text-sm flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-emerald-400 border border-emerald-500 flex items-center justify-center text-xs font-bold text-slate-800">S</div>
-                  <span className="text-slate-400">Start</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-yellow-300 border border-yellow-400 flex items-center justify-center text-xs font-bold text-slate-800">G</div>
-                  <span className="text-slate-400">Goal</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-slate-100 border border-slate-300"></div>
-                  <span className="text-slate-400">Clear (0)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-slate-800 border border-slate-700"></div>
-                  <span className="text-slate-400">Blocked (1)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-blue-500/30 border border-blue-500/50"></div>
-                  <span className="text-slate-400">Visited</span>
-                </div>
-              </div>
-            </div>
-
-            {/* BFS Queue */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-display font-semibold text-slate-300">BFS Queue</h3>
-                <span className="text-slate-500 font-mono text-sm">
-                  {step.levelSize !== null && `Level: ${step.levelProgress}/${step.levelSize}`}
-                </span>
-              </div>
-              <div className="flex gap-2 flex-wrap min-h-[40px]">
-                {step.queue.length === 0 ? (
-                  <span className="text-slate-600 italic">Empty</span>
-                ) : (
-                  step.queue.map(([r, c, cost], idx) => (
-                    <div
-                      key={`${r}-${c}-${idx}`}
-                      className={`px-3 py-1.5 rounded-lg font-mono text-sm ${
-                        idx === 0
-                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                          : 'bg-slate-800 text-slate-400 border border-slate-700'
-                      }`}
-                    >
-                      ({r},{c}):{cost}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Direction Indicator */}
-            {step.directionName && (
-              <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-                <h3 className="font-display font-semibold text-slate-300 mb-2">Checking Direction (8-way)</h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    ['↖ top-left', '↑ up', '↗ top-right', null],
-                    ['← left', null, '→ right', null],
-                    ['↙ bottom-left', '↓ down', '↘ bottom-right', null],
-                  ].flat().filter(Boolean).map((dir) => (
-                    <div
-                      key={dir}
-                      className={`px-3 py-2 rounded-lg font-mono text-xs transition-all text-center ${
-                        step.directionName === dir
-                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 scale-105'
-                          : 'bg-slate-800/50 text-slate-600 border border-slate-700/50'
-                      }`}
-                    >
-                      {dir}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))
             )}
-
-            {/* Insight Panel */}
-            <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-500/20 p-4">
-              <h3 className="font-display font-semibold text-purple-300 mb-2">Insight</h3>
-              <p className="text-slate-300">{step.insight}</p>
-            </div>
-
-            {/* Complexity Panel */}
-            <div className="bg-slate-900/80 rounded-xl border border-slate-700/50 p-4">
-              <h3 className="font-display font-semibold text-slate-300 mb-3">Complexity Analysis</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-slate-400 text-xs font-display mb-1">Time Complexity</div>
-                  <div className="text-emerald-400 font-mono text-lg">O(n²)</div>
-                  <div className="text-slate-500 text-xs mt-1">Each cell visited at most once</div>
-                </div>
-                <div className="bg-slate-800/50 rounded-lg p-3">
-                  <div className="text-slate-400 text-xs font-display mb-1">Space Complexity</div>
-                  <div className="text-emerald-400 font-mono text-lg">O(n²)</div>
-                  <div className="text-slate-500 text-xs mt-1">Queue can hold all cells</div>
-                </div>
-              </div>
-              <div className="text-slate-500 text-xs mt-2 text-center">
-                where n = grid dimension (n×n matrix)
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Navigation Controls */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handlePrevious}
-              disabled={currentStepIndex === 0}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
-            >
-              Previous
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentStepIndex === steps.length - 1}
-              className="px-6 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-cyan-600 hover:bg-cyan-500 text-white"
-            >
-              Next
-            </button>
+        {/* Legend */}
+        <div className="flex justify-center gap-4 mt-4 text-sm flex-wrap">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-emerald-400 border border-emerald-500 flex items-center justify-center text-xs font-bold text-slate-800">S</div>
+            <span className="text-slate-400">Start</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-slate-500 font-mono text-sm">
-              Step {currentStepIndex + 1} of {steps.length}
-            </span>
-            <div className="w-48 h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-yellow-300 border border-yellow-400 flex items-center justify-center text-xs font-bold text-slate-800">G</div>
+            <span className="text-slate-400">Goal</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-slate-100 border border-slate-300"></div>
+            <span className="text-slate-400">Clear (0)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-slate-800 border border-slate-700"></div>
+            <span className="text-slate-400">Blocked (1)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-blue-500/30 border border-blue-500/50"></div>
+            <span className="text-slate-400">Visited</span>
+          </div>
+        </div>
+      </div>
+
+      {/* BFS Queue */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display font-semibold text-slate-300">BFS Queue</h3>
+          <span className="text-slate-500 font-mono text-sm">
+            {step.levelSize !== null && `Level: ${step.levelProgress}/${step.levelSize}`}
+          </span>
+        </div>
+        <div className="flex gap-2 flex-wrap min-h-[40px]">
+          {step.queue.length === 0 ? (
+            <span className="text-slate-600 italic">Empty</span>
+          ) : (
+            step.queue.map(([r, c, cost], idx) => (
               <div
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
-                style={{ width: `${((currentStepIndex + 1) / steps.length) * 100}%` }}
-              />
-            </div>
+                key={`${r}-${c}-${idx}`}
+                className={`px-3 py-1.5 rounded-lg font-mono text-sm ${
+                  idx === 0
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                    : 'bg-slate-800 text-slate-400 border border-slate-700'
+                }`}
+              >
+                ({r},{c}):{cost}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Direction Indicator */}
+      {step.directionName && (
+        <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+          <h3 className="font-display font-semibold text-slate-300 mb-2">Checking Direction (8-way)</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              ['↖ top-left', '↑ up', '↗ top-right', null],
+              ['← left', null, '→ right', null],
+              ['↙ bottom-left', '↓ down', '↘ bottom-right', null],
+            ].flat().filter(Boolean).map((dir) => (
+              <div
+                key={dir}
+                className={`px-3 py-2 rounded-lg font-mono text-xs transition-all text-center ${
+                  step.directionName === dir
+                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 scale-105'
+                    : 'bg-slate-800/50 text-slate-600 border border-slate-700/50'
+                }`}
+              >
+                {dir}
+              </div>
+            ))}
           </div>
         </div>
+      )}
+    </>
+  )
 
-        {/* Description */}
-        <div className="mt-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4">
-          <p className="text-slate-300 font-display">{step.description}</p>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">BFS for Shortest Path</h4>
+          <p className="text-slate-400">BFS guarantees the shortest path in unweighted grids by exploring cells level by level.</p>
+        </div>
+        <div>
+          <h4 className="text-purple-400 font-mono mb-1">8-Directional Movement</h4>
+          <p className="text-slate-400">Can move horizontally, vertically, or diagonally to any adjacent cell.</p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-emerald-400 font-mono">Time: O(n²)</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(n²)</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '1091',
+        title: 'Shortest Path in Binary Matrix',
+        difficulty: 'medium',
+        tags: ['Array', 'BFS', 'Matrix'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="shortest_path_binary_matrix.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/fruit-into-baskets')({
   component: FruitIntoBasketsVisualization,
 })
 
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'def totalFruit(fruits: list[int]) -> int:' },
   { num: 2, code: '    start = 0' },
   { num: 3, code: '    max_len = 0' },
@@ -29,43 +31,44 @@ const CODE_LINES = [
   { num: 21, code: '    return max_len' },
 ]
 
-interface TestCase {
-  id: number
-  name: string
-  fruits: number[]
-  expected: number
-  explanation: string
-}
+const PROBLEM_DESCRIPTION = `You are visiting a farm that has a single row of fruit trees arranged from left to right. The trees are represented by an integer array fruits where fruits[i] is the type of fruit the ith tree produces.
 
-const TEST_CASES: TestCase[] = [
+You want to collect as much fruit as possible. However, the owner has some strict rules that you must follow:
+
+• You only have two baskets, and each basket can only hold a single type of fruit. There is no limit on the amount of fruit each basket can hold.
+• Starting from any tree of your choice, you must pick exactly one fruit from every tree (including the start tree) while moving to the right. The picked fruits must fit in one of your baskets.
+• Once you reach a tree with fruit that cannot fit in your baskets, you must stop.
+
+Given the integer array fruits, return the maximum number of fruits you can pick.`
+
+const EXAMPLES: Array<Example> = [
   {
-    id: 1,
-    name: 'All trees pickable',
-    fruits: [1, 2, 1],
-    expected: 3,
-    explanation: 'Can pick all 3 trees (types 1 and 2 fit in 2 baskets)',
+    input: 'fruits = [1,2,1]',
+    output: '3',
+    explanation: 'We can pick from all 3 trees.',
   },
   {
-    id: 2,
-    name: 'Must skip first tree',
-    fruits: [0, 1, 2, 2],
-    expected: 3,
-    explanation: 'Pick [1, 2, 2] - starting at tree 0 only gives [0, 1]',
+    input: 'fruits = [0,1,2,2]',
+    output: '3',
+    explanation: 'We can pick from trees [1,2,2]. If we had started at the first tree, we would only pick from trees [0,1].',
   },
   {
-    id: 3,
-    name: 'Contraction needed',
-    fruits: [1, 2, 3, 2, 2],
-    expected: 4,
-    explanation: 'Pick [2, 3, 2, 2] - window contracts when 3rd type appears',
+    input: 'fruits = [1,2,3,2,2]',
+    output: '4',
+    explanation: 'We can pick from trees [2,3,2,2]. If we had started at the first tree, we would only pick from trees [1,2].',
   },
+]
+
+const CONSTRAINTS = [
+  '1 <= fruits.length <= 10^5',
+  '0 <= fruits[i] < fruits.length',
 ]
 
 interface Step {
   lineNumber: number
   description: string
   insight: string
-  fruits: number[]
+  fruits: Array<number>
   start: number
   end: number
   maxLen: number
@@ -79,8 +82,40 @@ interface Step {
   justDeleted: number | null
 }
 
-function generateSteps(fruits: number[]): Step[] {
-  const steps: Step[] = []
+interface TestCaseData {
+  fruits: Array<number>
+  expected: number
+}
+
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  {
+    id: 1,
+    label: 'All trees pickable',
+    data: {
+      fruits: [1, 2, 1],
+      expected: 3,
+    },
+  },
+  {
+    id: 2,
+    label: 'Must skip first tree',
+    data: {
+      fruits: [0, 1, 2, 2],
+      expected: 3,
+    },
+  },
+  {
+    id: 3,
+    label: 'Contraction needed',
+    data: {
+      fruits: [1, 2, 3, 2, 2],
+      expected: 4,
+    },
+  },
+]
+
+function generateSteps(fruits: Array<number>): Array<Step> {
+  const steps: Array<Step> = []
 
   // Initial state
   steps.push({
@@ -471,31 +506,20 @@ function getFruitColor(fruitType: number) {
 function FruitIntoBasketsVisualization() {
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedTestCase, setSelectedTestCase] = useState(0)
-  const [showTestCase, setShowTestCase] = useState(false)
 
   const testCase = TEST_CASES[selectedTestCase]
-  const steps = useMemo(() => generateSteps(testCase.fruits), [selectedTestCase])
+  const steps = useMemo(() => generateSteps(testCase.data.fruits), [testCase.data.fruits])
   const step = steps[currentStep]
 
-  const handlePrevious = () => setCurrentStep((s) => Math.max(0, s - 1))
-  const handleNext = () => setCurrentStep((s) => Math.min(steps.length - 1, s + 1))
-  const handleReset = () => setCurrentStep(0)
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
+    setCurrentStep(0)
+  }
 
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100 font-mono">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
-
-        .font-display { font-family: 'Outfit', sans-serif; }
-        .font-code { font-family: 'IBM Plex Mono', monospace; }
-
-        .blueprint-grid {
-          background-image:
-            linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
-          background-size: 20px 20px;
-        }
-
         .glow-cyan { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); }
         .glow-orange { box-shadow: 0 0 20px rgba(251, 146, 60, 0.4); }
         .glow-green { box-shadow: 0 0 20px rgba(74, 222, 128, 0.4); }
@@ -509,336 +533,221 @@ function FruitIntoBasketsVisualization() {
         .animate-pulse-border {
           animation: pulse-border 1s ease-in-out infinite;
         }
-
-        @keyframes slide-in {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
       `}</style>
 
-      <div className="blueprint-grid min-h-screen">
-        <div className="max-w-[1600px] mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <a
-                href="/"
-                className="text-slate-500 hover:text-cyan-400 transition-colors font-mono text-sm"
-              >
-                &larr; Back
-              </a>
-              <span className="text-slate-700">/</span>
-              <span className="text-cyan-400 font-mono text-sm">problems</span>
-            </div>
+      {/* Fruit Array with Window */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Fruit Trees (Sliding Window)</span>
+        </div>
+        <div className="p-4">
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {step.fruits.map((fruit, i) => {
+              const inWindow = step.end >= 0 && i >= step.start && i <= step.end
+              const isStart = i === step.start && step.end >= 0
+              const isEnd = i === step.end
+              const colors = getFruitColor(fruit)
 
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="text-slate-500 font-mono">#904</span>
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                    MEDIUM
-                  </span>
-                </div>
-                <h1 className="text-3xl font-display font-bold text-slate-100 mb-2">
-                  Fruit Into Baskets
-                </h1>
-                <div className="flex gap-2">
-                  {['Array', 'Hash Table', 'Sliding Window'].map((tag) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-800 text-slate-400 text-xs font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        {/* Test Case Selector */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-3">
-            <span className="text-slate-400 text-sm font-display">Test Case:</span>
-            <div className="flex gap-2">
-              {TEST_CASES.map((tc, i) => (
-                <button
-                  key={tc.id}
-                  onClick={() => {
-                    setSelectedTestCase(i)
-                    setCurrentStep(0)
-                  }}
-                  className={`px-4 py-2 rounded-lg text-sm font-display transition-all ${
-                    selectedTestCase === i
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
-                      : 'bg-slate-800/50 text-slate-400 border border-slate-700 hover:border-slate-600'
-                  }`}
-                >
-                  {tc.name}
-                </button>
-              ))}
-            </div>
-          </div>
+              let glowClass = ''
+              if (step.highlightStart && isStart) glowClass = 'glow-orange'
+              else if (step.highlightEnd && isEnd) glowClass = 'glow-cyan'
+              else if (inWindow && !step.windowValid) glowClass = 'glow-red'
 
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowTestCase(!showTestCase)}
-              className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${showTestCase ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Show Test Case Details
-            </button>
-          </div>
-
-          {showTestCase && (
-            <div className="mt-3 p-4 bg-slate-900/70 rounded-lg border border-slate-700 animate-slide-in">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-slate-500">Input:</span>
-                  <div className="font-code text-cyan-300 mt-1">
-                    fruits = [{testCase.fruits.join(', ')}]
+              return (
+                <div key={i} className="flex flex-col items-center">
+                  <div
+                    className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center font-mono text-lg font-bold transition-all duration-300 ${
+                      inWindow
+                        ? `${colors.bg} ${colors.border} ${colors.text} ${glowClass}`
+                        : 'bg-slate-800/50 border-slate-600 text-slate-500'
+                    } ${!step.windowValid && inWindow ? 'animate-pulse-border' : ''}`}
+                  >
+                    {fruit}
+                  </div>
+                  <span className="text-xs text-slate-500 mt-1">{i}</span>
+                  <div className="flex gap-1 mt-1 h-4">
+                    {isStart && step.end >= 0 && (
+                      <span className="text-[10px] px-1 rounded bg-orange-500/30 text-orange-300">start</span>
+                    )}
+                    {isEnd && (
+                      <span className="text-[10px] px-1 rounded bg-cyan-500/30 text-cyan-300">end</span>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <span className="text-slate-500">Expected Output:</span>
-                  <div className="font-code text-emerald-300 mt-1">{testCase.expected}</div>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-slate-700">
-                <span className="text-slate-500 text-sm">Explanation:</span>
-                <p className="text-slate-300 text-sm mt-1">{testCase.explanation}</p>
-              </div>
-            </div>
-          )}
-        </div>
+              )
+            })}
+          </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Code Panel */}
-          <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50">
-              <span className="text-slate-400 text-sm font-display">Python Code</span>
+          {/* Window Info */}
+          <div className="flex justify-center gap-4 text-sm">
+            <div className={`px-3 py-1 rounded-lg ${step.windowValid ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
+              {step.fruitCount.size} fruit types {step.windowValid ? '(valid)' : '(overflow!)'}
             </div>
-            <div className="p-4 font-code text-sm overflow-auto max-h-[500px]">
-              {CODE_LINES.map((line) => {
-                const isActive = line.num === step.lineNumber
+            {step.end >= 0 && (
+              <div className="px-3 py-1 rounded-lg bg-slate-800 text-slate-300">
+                Window size: {step.end - step.start + 1}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Baskets (HashMap) */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Baskets (fruit_count)</span>
+        </div>
+        <div className="p-4">
+          <div className="flex justify-center gap-4">
+            {step.fruitCount.size === 0 ? (
+              <div className="text-slate-500 text-sm font-mono">{ }</div>
+            ) : (
+              Array.from(step.fruitCount.entries()).map(([fruitType, count]) => {
+                const colors = getFruitColor(fruitType)
+                const isHighlighted = step.highlightBasket === fruitType
+
                 return (
                   <div
-                    key={line.num}
-                    className={`flex py-0.5 rounded transition-all duration-200 ${
-                      isActive ? 'bg-orange-500/20 border-l-2 border-orange-400 -ml-[2px]' : ''
+                    key={fruitType}
+                    className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
+                      colors.bg
+                    } ${colors.border} ${
+                      isHighlighted ? 'glow-cyan scale-105' : ''
                     }`}
                   >
-                    <span className="w-8 text-right pr-4 text-slate-600 select-none text-xs leading-6">
-                      {line.num}
-                    </span>
-                    <pre className={`leading-6 ${isActive ? 'text-cyan-300' : 'text-slate-300'}`}>
-                      {line.code || ' '}
-                    </pre>
+                    <div className="text-2xl mb-2">
+                      {fruitType === 0 ? '🍎' : fruitType === 1 ? '🍌' : fruitType === 2 ? '🍇' : fruitType === 3 ? '🍐' : '🍊'}
+                    </div>
+                    <div className={`font-mono text-sm ${colors.text}`}>
+                      Type {fruitType}
+                    </div>
+                    <div className={`font-mono text-2xl font-bold mt-1 ${colors.text}`}>
+                      ×{count}
+                    </div>
                   </div>
                 )
-              })}
-            </div>
-          </div>
+              })
+            )}
 
-          {/* Visualization Panel */}
-          <div className="space-y-4">
-            {/* Fruit Array with Window */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-4">Fruit Trees (Sliding Window)</div>
-
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
-                {step.fruits.map((fruit, i) => {
-                  const inWindow = step.end >= 0 && i >= step.start && i <= step.end
-                  const isStart = i === step.start && step.end >= 0
-                  const isEnd = i === step.end
-                  const colors = getFruitColor(fruit)
-
-                  let glowClass = ''
-                  if (step.highlightStart && isStart) glowClass = 'glow-orange'
-                  else if (step.highlightEnd && isEnd) glowClass = 'glow-cyan'
-                  else if (inWindow && !step.windowValid) glowClass = 'glow-red'
-
-                  return (
-                    <div key={i} className="flex flex-col items-center">
-                      <div
-                        className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center font-code text-lg font-bold transition-all duration-300 ${
-                          inWindow
-                            ? `${colors.bg} ${colors.border} ${colors.text} ${glowClass}`
-                            : 'bg-slate-800/50 border-slate-600 text-slate-500'
-                        } ${!step.windowValid && inWindow ? 'animate-pulse-border' : ''}`}
-                      >
-                        {fruit}
-                      </div>
-                      <span className="text-xs text-slate-500 mt-1">{i}</span>
-                      <div className="flex gap-1 mt-1 h-4">
-                        {isStart && step.end >= 0 && (
-                          <span className="text-[10px] px-1 rounded bg-orange-500/30 text-orange-300">start</span>
-                        )}
-                        {isEnd && (
-                          <span className="text-[10px] px-1 rounded bg-cyan-500/30 text-cyan-300">end</span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Window Info */}
-              <div className="flex justify-center gap-4 text-sm">
-                <div className={`px-3 py-1 rounded-lg ${step.windowValid ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'}`}>
-                  {step.fruitCount.size} fruit types {step.windowValid ? '(valid)' : '(overflow!)'}
+            {step.justDeleted !== null && (
+              <div className="flex flex-col items-center p-4 rounded-xl border-2 border-dashed border-red-400/50 bg-red-500/10 opacity-50">
+                <div className="text-2xl mb-2">❌</div>
+                <div className="font-mono text-sm text-red-300">
+                  Type {step.justDeleted}
                 </div>
-                {step.end >= 0 && (
-                  <div className="px-3 py-1 rounded-lg bg-slate-800 text-slate-300">
-                    Window size: {step.end - step.start + 1}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Baskets (HashMap) */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-4">Baskets (fruit_count)</div>
-
-              <div className="flex justify-center gap-4">
-                {step.fruitCount.size === 0 ? (
-                  <div className="text-slate-500 text-sm font-code">{ }</div>
-                ) : (
-                  Array.from(step.fruitCount.entries()).map(([fruitType, count]) => {
-                    const colors = getFruitColor(fruitType)
-                    const isHighlighted = step.highlightBasket === fruitType
-
-                    return (
-                      <div
-                        key={fruitType}
-                        className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-300 ${
-                          colors.bg
-                        } ${colors.border} ${
-                          isHighlighted ? 'glow-cyan scale-105' : ''
-                        }`}
-                      >
-                        <div className="text-2xl mb-2">
-                          {fruitType === 0 ? '🍎' : fruitType === 1 ? '🍌' : fruitType === 2 ? '🍇' : fruitType === 3 ? '🍐' : '🍊'}
-                        </div>
-                        <div className={`font-code text-sm ${colors.text}`}>
-                          Type {fruitType}
-                        </div>
-                        <div className={`font-code text-2xl font-bold mt-1 ${colors.text}`}>
-                          ×{count}
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
-
-                {step.justDeleted !== null && (
-                  <div className="flex flex-col items-center p-4 rounded-xl border-2 border-dashed border-red-400/50 bg-red-500/10 opacity-50">
-                    <div className="text-2xl mb-2">❌</div>
-                    <div className="font-code text-sm text-red-300">
-                      Type {step.justDeleted}
-                    </div>
-                    <div className="font-code text-sm text-red-400 mt-1">
-                      removed
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Variables */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-slate-400 text-sm font-display mb-3">Variables</div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className={`p-3 rounded-lg border ${step.highlightStart ? 'bg-orange-500/20 border-orange-400' : 'bg-slate-800/50 border-slate-600'}`}>
-                  <div className="text-xs text-slate-500 mb-1">start</div>
-                  <div className="font-code text-xl text-orange-300">{step.start}</div>
-                </div>
-                <div className={`p-3 rounded-lg border ${step.highlightEnd ? 'bg-cyan-500/20 border-cyan-400' : 'bg-slate-800/50 border-slate-600'}`}>
-                  <div className="text-xs text-slate-500 mb-1">end</div>
-                  <div className="font-code text-xl text-cyan-300">{step.end >= 0 ? step.end : '-'}</div>
-                </div>
-                <div className={`p-3 rounded-lg border ${step.phase === 'update-max' ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}>
-                  <div className="text-xs text-slate-500 mb-1">max_len</div>
-                  <div className="font-code text-xl text-emerald-300">{step.maxLen}</div>
+                <div className="font-mono text-sm text-red-400 mt-1">
+                  removed
                 </div>
               </div>
-            </div>
-
-            {/* Step Info */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 p-4">
-              <div className="text-cyan-300 font-display font-medium mb-2">{step.description}</div>
-              <div className="text-slate-400 text-sm">{step.insight}</div>
-            </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Controls */}
-        <div className="mt-6 flex items-center justify-center gap-4">
-          <button
-            onClick={handleReset}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors"
-          >
-            Reset
-          </button>
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 0}
-            className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <span className="text-slate-500 text-sm font-code">
-            Step {currentStep + 1} / {steps.length}
-          </span>
-          <button
-            onClick={handleNext}
-            disabled={currentStep === steps.length - 1}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-display transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+      {/* Variables */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-2 bg-slate-800/70 border-b border-slate-700">
+          <span className="text-slate-300 font-mono text-sm">Variables</span>
         </div>
-
-        {/* Algorithm Insight */}
-        <div className="mt-8 bg-slate-900/70 rounded-xl border border-slate-700 p-6">
-          <h3 className="text-lg font-display font-semibold text-slate-100 mb-4">Algorithm Insight</h3>
-          <div className="grid md:grid-cols-2 gap-6 text-sm">
-            <div>
-              <h4 className="text-cyan-400 font-medium mb-2">Pattern: Sliding Window + HashMap</h4>
-              <p className="text-slate-400">
-                The window expands by moving <span className="text-cyan-300">end</span> right, adding fruits to our count.
-                When we exceed 2 fruit types, we contract by moving <span className="text-orange-300">start</span> right
-                until we're back to 2 types.
-              </p>
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className={`p-3 rounded-lg border ${step.highlightStart ? 'bg-orange-500/20 border-orange-400' : 'bg-slate-800/50 border-slate-600'}`}>
+              <div className="text-xs text-slate-500 mb-1">start</div>
+              <div className="font-mono text-xl text-orange-300">{step.start}</div>
             </div>
-            <div>
-              <h4 className="text-emerald-400 font-medium mb-2">Why It Works</h4>
-              <p className="text-slate-400">
-                Each element is visited at most twice (once by end, once by start), giving us O(n) time.
-                The hashmap tracks at most 3 fruit types, so space is O(1).
-              </p>
+            <div className={`p-3 rounded-lg border ${step.highlightEnd ? 'bg-cyan-500/20 border-cyan-400' : 'bg-slate-800/50 border-slate-600'}`}>
+              <div className="text-xs text-slate-500 mb-1">end</div>
+              <div className="font-mono text-xl text-cyan-300">{step.end >= 0 ? step.end : '-'}</div>
             </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-slate-700 flex gap-6">
-            <div>
-              <span className="text-slate-500">Time:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(n)</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Space:</span>
-              <span className="text-emerald-300 ml-2 font-code">O(1)</span>
+            <div className={`p-3 rounded-lg border ${step.phase === 'update-max' ? 'bg-emerald-500/20 border-emerald-400 glow-green' : 'bg-slate-800/50 border-slate-600'}`}>
+              <div className="text-xs text-slate-500 mb-1">max_len</div>
+              <div className="font-mono text-xl text-emerald-300">{step.maxLen}</div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Completion */}
+      {step.phase === 'complete' && (
+        <div className="bg-emerald-500/10 rounded-xl border border-emerald-500/30 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-mono">Maximum fruits: {step.maxLen}</div>
+              <div className="text-slate-500 font-mono text-xs">
+                Expected: {testCase.data.expected}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-cyan-400 font-mono mb-1">Pattern: Sliding Window + HashMap</h4>
+          <p className="text-slate-400">
+            The window expands by moving <span className="text-cyan-300">end</span> right, adding fruits to our count.
+            When we exceed 2 fruit types, we contract by moving <span className="text-orange-300">start</span> right
+            until we're back to 2 types.
+          </p>
+        </div>
+        <div>
+          <h4 className="text-emerald-400 font-mono mb-1">Why It Works</h4>
+          <p className="text-slate-400">
+            Each element is visited at most twice (once by end, once by start), giving us O(n) time.
+            The hashmap tracks at most 3 fruit types, so space is O(1).
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-purple-400 font-mono">Time: O(n)</span>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-pink-400 font-mono">Space: O(1)</span>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '904',
+        title: 'Fruit Into Baskets',
+        difficulty: 'medium',
+        tags: ['Array', 'Hash Table', 'Sliding Window'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="fruit_into_baskets.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }

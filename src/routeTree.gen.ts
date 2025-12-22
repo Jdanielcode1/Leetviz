@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProblemListRouteImport } from './routes/problem-list'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as ProblemsRouteRouteImport } from './routes/problems/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as VizIdRouteImport } from './routes/viz/$id'
 import { Route as ProblemsValidateBstRouteImport } from './routes/problems/validate-bst'
 import { Route as ProblemsUndergroundSystemRouteImport } from './routes/problems/underground-system'
@@ -40,7 +42,9 @@ import { Route as ProblemsBrowserHistoryRouteImport } from './routes/problems/br
 import { Route as ProblemsBasicCalculatorIiRouteImport } from './routes/problems/basic-calculator-ii'
 import { Route as ProblemsAddTwoNumbersRouteImport } from './routes/problems/add-two-numbers'
 import { Route as ProblemsAddBinaryRouteImport } from './routes/problems/add-binary'
-import { Route as ProblemsLayoutRouteImport } from './routes/problems/_layout'
+import { Route as PSlugRouteImport } from './routes/p/$slug'
+import { Route as AdminProblemsNewRouteImport } from './routes/admin/problems/new'
+import { Route as AdminProblemsSlugRouteImport } from './routes/admin/problems/$slug'
 
 const ProblemListRoute = ProblemListRouteImport.update({
   id: '/problem-list',
@@ -57,9 +61,19 @@ const CreateRoute = CreateRouteImport.update({
   path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProblemsRouteRoute = ProblemsRouteRouteImport.update({
+  id: '/problems',
+  path: '/problems',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VizIdRoute = VizIdRouteImport.update({
@@ -70,154 +84,166 @@ const VizIdRoute = VizIdRouteImport.update({
 const ProblemsValidateBstRoute = ProblemsValidateBstRouteImport.update({
   id: '/validate-bst',
   path: '/validate-bst',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsUndergroundSystemRoute =
   ProblemsUndergroundSystemRouteImport.update({
     id: '/underground-system',
     path: '/underground-system',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsTopKFrequentWordsRoute =
   ProblemsTopKFrequentWordsRouteImport.update({
     id: '/top-k-frequent-words',
     path: '/top-k-frequent-words',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsThreeSumRoute = ProblemsThreeSumRouteImport.update({
   id: '/three-sum',
   path: '/three-sum',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsSubarraySumKRoute = ProblemsSubarraySumKRouteImport.update({
   id: '/subarray-sum-k',
   path: '/subarray-sum-k',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsSingleElementSortedRoute =
   ProblemsSingleElementSortedRouteImport.update({
     id: '/single-element-sorted',
     path: '/single-element-sorted',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsShortestPathBinaryMatrixRoute =
   ProblemsShortestPathBinaryMatrixRouteImport.update({
     id: '/shortest-path-binary-matrix',
     path: '/shortest-path-binary-matrix',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsRottingOrangesRoute = ProblemsRottingOrangesRouteImport.update({
   id: '/rotting-oranges',
   path: '/rotting-oranges',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsRotateImageRoute = ProblemsRotateImageRouteImport.update({
   id: '/rotate-image',
   path: '/rotate-image',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsReverseIntegerRoute = ProblemsReverseIntegerRouteImport.update({
   id: '/reverse-integer',
   path: '/reverse-integer',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsRemoveDuplicatesIiRoute =
   ProblemsRemoveDuplicatesIiRouteImport.update({
     id: '/remove-duplicates-ii',
     path: '/remove-duplicates-ii',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsRandomizedSetRoute = ProblemsRandomizedSetRouteImport.update({
   id: '/randomized-set',
   path: '/randomized-set',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsOrderedStreamRoute = ProblemsOrderedStreamRouteImport.update({
   id: '/ordered-stream',
   path: '/ordered-stream',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsMergeSortedArrayRoute =
   ProblemsMergeSortedArrayRouteImport.update({
     id: '/merge-sorted-array',
     path: '/merge-sorted-array',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsMagicDictionaryRoute = ProblemsMagicDictionaryRouteImport.update({
   id: '/magic-dictionary',
   path: '/magic-dictionary',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsLruCacheRoute = ProblemsLruCacheRouteImport.update({
   id: '/lru-cache',
   path: '/lru-cache',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsLongestCommonPrefixRoute =
   ProblemsLongestCommonPrefixRouteImport.update({
     id: '/longest-common-prefix',
     path: '/longest-common-prefix',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsFruitIntoBasketsRoute =
   ProblemsFruitIntoBasketsRouteImport.update({
     id: '/fruit-into-baskets',
     path: '/fruit-into-baskets',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsFlattenMultilevelListRoute =
   ProblemsFlattenMultilevelListRouteImport.update({
     id: '/flatten-multilevel-list',
     path: '/flatten-multilevel-list',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsFizzBuzzRoute = ProblemsFizzBuzzRouteImport.update({
-  id: '/problems/fizz-buzz',
-  path: '/problems/fizz-buzz',
-  getParentRoute: () => rootRouteImport,
+  id: '/fizz-buzz',
+  path: '/fizz-buzz',
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsDecodeStringRoute = ProblemsDecodeStringRouteImport.update({
   id: '/decode-string',
   path: '/decode-string',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsContainerWaterRoute = ProblemsContainerWaterRouteImport.update({
   id: '/container-water',
   path: '/container-water',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsBrowserHistoryRoute = ProblemsBrowserHistoryRouteImport.update({
   id: '/browser-history',
   path: '/browser-history',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsBasicCalculatorIiRoute =
   ProblemsBasicCalculatorIiRouteImport.update({
     id: '/basic-calculator-ii',
     path: '/basic-calculator-ii',
-    getParentRoute: () => ProblemsRoute,
+    getParentRoute: () => ProblemsRouteRoute,
   } as any)
 const ProblemsAddTwoNumbersRoute = ProblemsAddTwoNumbersRouteImport.update({
   id: '/add-two-numbers',
   path: '/add-two-numbers',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
 const ProblemsAddBinaryRoute = ProblemsAddBinaryRouteImport.update({
   id: '/add-binary',
   path: '/add-binary',
-  getParentRoute: () => ProblemsRoute,
+  getParentRoute: () => ProblemsRouteRoute,
 } as any)
-const ProblemsLayoutRoute = ProblemsLayoutRouteImport.update({
-  id: '/_layout',
-  getParentRoute: () => ProblemsRoute,
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProblemsNewRoute = AdminProblemsNewRouteImport.update({
+  id: '/admin/problems/new',
+  path: '/admin/problems/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProblemsSlugRoute = AdminProblemsSlugRouteImport.update({
+  id: '/admin/problems/$slug',
+  path: '/admin/problems/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/problems': typeof ProblemsRouteRouteWithChildren
   '/create': typeof CreateRoute
   '/gallery': typeof GalleryRoute
   '/problem-list': typeof ProblemListRoute
-  '/problems': typeof ProblemsLayoutRoute
+  '/p/$slug': typeof PSlugRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -245,13 +271,17 @@ export interface FileRoutesByFullPath {
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
   '/viz/$id': typeof VizIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/problems/$slug': typeof AdminProblemsSlugRoute
+  '/admin/problems/new': typeof AdminProblemsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/problems': typeof ProblemsRouteRouteWithChildren
   '/create': typeof CreateRoute
   '/gallery': typeof GalleryRoute
   '/problem-list': typeof ProblemListRoute
-  '/problems': typeof ProblemsLayoutRoute
+  '/p/$slug': typeof PSlugRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -279,14 +309,18 @@ export interface FileRoutesByTo {
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
   '/viz/$id': typeof VizIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/problems/$slug': typeof AdminProblemsSlugRoute
+  '/admin/problems/new': typeof AdminProblemsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/problems': typeof ProblemsRouteRouteWithChildren
   '/create': typeof CreateRoute
   '/gallery': typeof GalleryRoute
   '/problem-list': typeof ProblemListRoute
-  '/problems/_layout': typeof ProblemsLayoutRoute
+  '/p/$slug': typeof PSlugRoute
   '/problems/add-binary': typeof ProblemsAddBinaryRoute
   '/problems/add-two-numbers': typeof ProblemsAddTwoNumbersRoute
   '/problems/basic-calculator-ii': typeof ProblemsBasicCalculatorIiRoute
@@ -314,15 +348,19 @@ export interface FileRoutesById {
   '/problems/underground-system': typeof ProblemsUndergroundSystemRoute
   '/problems/validate-bst': typeof ProblemsValidateBstRoute
   '/viz/$id': typeof VizIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/problems/$slug': typeof AdminProblemsSlugRoute
+  '/admin/problems/new': typeof AdminProblemsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/problems'
     | '/create'
     | '/gallery'
     | '/problem-list'
-    | '/problems'
+    | '/p/$slug'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -350,13 +388,17 @@ export interface FileRouteTypes {
     | '/problems/underground-system'
     | '/problems/validate-bst'
     | '/viz/$id'
+    | '/admin'
+    | '/admin/problems/$slug'
+    | '/admin/problems/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/problems'
     | '/create'
     | '/gallery'
     | '/problem-list'
-    | '/problems'
+    | '/p/$slug'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -384,13 +426,17 @@ export interface FileRouteTypes {
     | '/problems/underground-system'
     | '/problems/validate-bst'
     | '/viz/$id'
+    | '/admin'
+    | '/admin/problems/$slug'
+    | '/admin/problems/new'
   id:
     | '__root__'
     | '/'
+    | '/problems'
     | '/create'
     | '/gallery'
     | '/problem-list'
-    | '/problems/_layout'
+    | '/p/$slug'
     | '/problems/add-binary'
     | '/problems/add-two-numbers'
     | '/problems/basic-calculator-ii'
@@ -418,15 +464,22 @@ export interface FileRouteTypes {
     | '/problems/underground-system'
     | '/problems/validate-bst'
     | '/viz/$id'
+    | '/admin/'
+    | '/admin/problems/$slug'
+    | '/admin/problems/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProblemsRouteRoute: typeof ProblemsRouteRouteWithChildren
   CreateRoute: typeof CreateRoute
   GalleryRoute: typeof GalleryRoute
   ProblemListRoute: typeof ProblemListRoute
-  ProblemsFizzBuzzRoute: typeof ProblemsFizzBuzzRoute
+  PSlugRoute: typeof PSlugRoute
   VizIdRoute: typeof VizIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminProblemsSlugRoute: typeof AdminProblemsSlugRoute
+  AdminProblemsNewRoute: typeof AdminProblemsNewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,11 +505,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/problems': {
+      id: '/problems'
+      path: '/problems'
+      fullPath: '/problems'
+      preLoaderRoute: typeof ProblemsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/viz/$id': {
@@ -471,200 +538,280 @@ declare module '@tanstack/react-router' {
       path: '/validate-bst'
       fullPath: '/problems/validate-bst'
       preLoaderRoute: typeof ProblemsValidateBstRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/underground-system': {
       id: '/problems/underground-system'
       path: '/underground-system'
       fullPath: '/problems/underground-system'
       preLoaderRoute: typeof ProblemsUndergroundSystemRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/top-k-frequent-words': {
       id: '/problems/top-k-frequent-words'
       path: '/top-k-frequent-words'
       fullPath: '/problems/top-k-frequent-words'
       preLoaderRoute: typeof ProblemsTopKFrequentWordsRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/three-sum': {
       id: '/problems/three-sum'
       path: '/three-sum'
       fullPath: '/problems/three-sum'
       preLoaderRoute: typeof ProblemsThreeSumRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/subarray-sum-k': {
       id: '/problems/subarray-sum-k'
       path: '/subarray-sum-k'
       fullPath: '/problems/subarray-sum-k'
       preLoaderRoute: typeof ProblemsSubarraySumKRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/single-element-sorted': {
       id: '/problems/single-element-sorted'
       path: '/single-element-sorted'
       fullPath: '/problems/single-element-sorted'
       preLoaderRoute: typeof ProblemsSingleElementSortedRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/shortest-path-binary-matrix': {
       id: '/problems/shortest-path-binary-matrix'
       path: '/shortest-path-binary-matrix'
       fullPath: '/problems/shortest-path-binary-matrix'
       preLoaderRoute: typeof ProblemsShortestPathBinaryMatrixRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/rotting-oranges': {
       id: '/problems/rotting-oranges'
       path: '/rotting-oranges'
       fullPath: '/problems/rotting-oranges'
       preLoaderRoute: typeof ProblemsRottingOrangesRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/rotate-image': {
       id: '/problems/rotate-image'
       path: '/rotate-image'
       fullPath: '/problems/rotate-image'
       preLoaderRoute: typeof ProblemsRotateImageRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/reverse-integer': {
       id: '/problems/reverse-integer'
       path: '/reverse-integer'
       fullPath: '/problems/reverse-integer'
       preLoaderRoute: typeof ProblemsReverseIntegerRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/remove-duplicates-ii': {
       id: '/problems/remove-duplicates-ii'
       path: '/remove-duplicates-ii'
       fullPath: '/problems/remove-duplicates-ii'
       preLoaderRoute: typeof ProblemsRemoveDuplicatesIiRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/randomized-set': {
       id: '/problems/randomized-set'
       path: '/randomized-set'
       fullPath: '/problems/randomized-set'
       preLoaderRoute: typeof ProblemsRandomizedSetRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/ordered-stream': {
       id: '/problems/ordered-stream'
       path: '/ordered-stream'
       fullPath: '/problems/ordered-stream'
       preLoaderRoute: typeof ProblemsOrderedStreamRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/merge-sorted-array': {
       id: '/problems/merge-sorted-array'
       path: '/merge-sorted-array'
       fullPath: '/problems/merge-sorted-array'
       preLoaderRoute: typeof ProblemsMergeSortedArrayRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/magic-dictionary': {
       id: '/problems/magic-dictionary'
       path: '/magic-dictionary'
       fullPath: '/problems/magic-dictionary'
       preLoaderRoute: typeof ProblemsMagicDictionaryRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/lru-cache': {
       id: '/problems/lru-cache'
       path: '/lru-cache'
       fullPath: '/problems/lru-cache'
       preLoaderRoute: typeof ProblemsLruCacheRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/longest-common-prefix': {
       id: '/problems/longest-common-prefix'
       path: '/longest-common-prefix'
       fullPath: '/problems/longest-common-prefix'
       preLoaderRoute: typeof ProblemsLongestCommonPrefixRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/fruit-into-baskets': {
       id: '/problems/fruit-into-baskets'
       path: '/fruit-into-baskets'
       fullPath: '/problems/fruit-into-baskets'
       preLoaderRoute: typeof ProblemsFruitIntoBasketsRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/flatten-multilevel-list': {
       id: '/problems/flatten-multilevel-list'
       path: '/flatten-multilevel-list'
       fullPath: '/problems/flatten-multilevel-list'
       preLoaderRoute: typeof ProblemsFlattenMultilevelListRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/fizz-buzz': {
       id: '/problems/fizz-buzz'
-      path: '/problems/fizz-buzz'
+      path: '/fizz-buzz'
       fullPath: '/problems/fizz-buzz'
       preLoaderRoute: typeof ProblemsFizzBuzzRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/decode-string': {
       id: '/problems/decode-string'
       path: '/decode-string'
       fullPath: '/problems/decode-string'
       preLoaderRoute: typeof ProblemsDecodeStringRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/container-water': {
       id: '/problems/container-water'
       path: '/container-water'
       fullPath: '/problems/container-water'
       preLoaderRoute: typeof ProblemsContainerWaterRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/browser-history': {
       id: '/problems/browser-history'
       path: '/browser-history'
       fullPath: '/problems/browser-history'
       preLoaderRoute: typeof ProblemsBrowserHistoryRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/basic-calculator-ii': {
       id: '/problems/basic-calculator-ii'
       path: '/basic-calculator-ii'
       fullPath: '/problems/basic-calculator-ii'
       preLoaderRoute: typeof ProblemsBasicCalculatorIiRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/add-two-numbers': {
       id: '/problems/add-two-numbers'
       path: '/add-two-numbers'
       fullPath: '/problems/add-two-numbers'
       preLoaderRoute: typeof ProblemsAddTwoNumbersRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
     '/problems/add-binary': {
       id: '/problems/add-binary'
       path: '/add-binary'
       fullPath: '/problems/add-binary'
       preLoaderRoute: typeof ProblemsAddBinaryRouteImport
-      parentRoute: typeof ProblemsRoute
+      parentRoute: typeof ProblemsRouteRoute
     }
-    '/problems/_layout': {
-      id: '/problems/_layout'
-      path: ''
-      fullPath: '/problems'
-      preLoaderRoute: typeof ProblemsLayoutRouteImport
-      parentRoute: typeof ProblemsRoute
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/problems/new': {
+      id: '/admin/problems/new'
+      path: '/admin/problems/new'
+      fullPath: '/admin/problems/new'
+      preLoaderRoute: typeof AdminProblemsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/problems/$slug': {
+      id: '/admin/problems/$slug'
+      path: '/admin/problems/$slug'
+      fullPath: '/admin/problems/$slug'
+      preLoaderRoute: typeof AdminProblemsSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface ProblemsRouteRouteChildren {
+  ProblemsAddBinaryRoute: typeof ProblemsAddBinaryRoute
+  ProblemsAddTwoNumbersRoute: typeof ProblemsAddTwoNumbersRoute
+  ProblemsBasicCalculatorIiRoute: typeof ProblemsBasicCalculatorIiRoute
+  ProblemsBrowserHistoryRoute: typeof ProblemsBrowserHistoryRoute
+  ProblemsContainerWaterRoute: typeof ProblemsContainerWaterRoute
+  ProblemsDecodeStringRoute: typeof ProblemsDecodeStringRoute
+  ProblemsFizzBuzzRoute: typeof ProblemsFizzBuzzRoute
+  ProblemsFlattenMultilevelListRoute: typeof ProblemsFlattenMultilevelListRoute
+  ProblemsFruitIntoBasketsRoute: typeof ProblemsFruitIntoBasketsRoute
+  ProblemsLongestCommonPrefixRoute: typeof ProblemsLongestCommonPrefixRoute
+  ProblemsLruCacheRoute: typeof ProblemsLruCacheRoute
+  ProblemsMagicDictionaryRoute: typeof ProblemsMagicDictionaryRoute
+  ProblemsMergeSortedArrayRoute: typeof ProblemsMergeSortedArrayRoute
+  ProblemsOrderedStreamRoute: typeof ProblemsOrderedStreamRoute
+  ProblemsRandomizedSetRoute: typeof ProblemsRandomizedSetRoute
+  ProblemsRemoveDuplicatesIiRoute: typeof ProblemsRemoveDuplicatesIiRoute
+  ProblemsReverseIntegerRoute: typeof ProblemsReverseIntegerRoute
+  ProblemsRotateImageRoute: typeof ProblemsRotateImageRoute
+  ProblemsRottingOrangesRoute: typeof ProblemsRottingOrangesRoute
+  ProblemsShortestPathBinaryMatrixRoute: typeof ProblemsShortestPathBinaryMatrixRoute
+  ProblemsSingleElementSortedRoute: typeof ProblemsSingleElementSortedRoute
+  ProblemsSubarraySumKRoute: typeof ProblemsSubarraySumKRoute
+  ProblemsThreeSumRoute: typeof ProblemsThreeSumRoute
+  ProblemsTopKFrequentWordsRoute: typeof ProblemsTopKFrequentWordsRoute
+  ProblemsUndergroundSystemRoute: typeof ProblemsUndergroundSystemRoute
+  ProblemsValidateBstRoute: typeof ProblemsValidateBstRoute
+}
+
+const ProblemsRouteRouteChildren: ProblemsRouteRouteChildren = {
+  ProblemsAddBinaryRoute: ProblemsAddBinaryRoute,
+  ProblemsAddTwoNumbersRoute: ProblemsAddTwoNumbersRoute,
+  ProblemsBasicCalculatorIiRoute: ProblemsBasicCalculatorIiRoute,
+  ProblemsBrowserHistoryRoute: ProblemsBrowserHistoryRoute,
+  ProblemsContainerWaterRoute: ProblemsContainerWaterRoute,
+  ProblemsDecodeStringRoute: ProblemsDecodeStringRoute,
+  ProblemsFizzBuzzRoute: ProblemsFizzBuzzRoute,
+  ProblemsFlattenMultilevelListRoute: ProblemsFlattenMultilevelListRoute,
+  ProblemsFruitIntoBasketsRoute: ProblemsFruitIntoBasketsRoute,
+  ProblemsLongestCommonPrefixRoute: ProblemsLongestCommonPrefixRoute,
+  ProblemsLruCacheRoute: ProblemsLruCacheRoute,
+  ProblemsMagicDictionaryRoute: ProblemsMagicDictionaryRoute,
+  ProblemsMergeSortedArrayRoute: ProblemsMergeSortedArrayRoute,
+  ProblemsOrderedStreamRoute: ProblemsOrderedStreamRoute,
+  ProblemsRandomizedSetRoute: ProblemsRandomizedSetRoute,
+  ProblemsRemoveDuplicatesIiRoute: ProblemsRemoveDuplicatesIiRoute,
+  ProblemsReverseIntegerRoute: ProblemsReverseIntegerRoute,
+  ProblemsRotateImageRoute: ProblemsRotateImageRoute,
+  ProblemsRottingOrangesRoute: ProblemsRottingOrangesRoute,
+  ProblemsShortestPathBinaryMatrixRoute: ProblemsShortestPathBinaryMatrixRoute,
+  ProblemsSingleElementSortedRoute: ProblemsSingleElementSortedRoute,
+  ProblemsSubarraySumKRoute: ProblemsSubarraySumKRoute,
+  ProblemsThreeSumRoute: ProblemsThreeSumRoute,
+  ProblemsTopKFrequentWordsRoute: ProblemsTopKFrequentWordsRoute,
+  ProblemsUndergroundSystemRoute: ProblemsUndergroundSystemRoute,
+  ProblemsValidateBstRoute: ProblemsValidateBstRoute,
+}
+
+const ProblemsRouteRouteWithChildren = ProblemsRouteRoute._addFileChildren(
+  ProblemsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProblemsRouteRoute: ProblemsRouteRouteWithChildren,
   CreateRoute: CreateRoute,
   GalleryRoute: GalleryRoute,
   ProblemListRoute: ProblemListRoute,
-  ProblemsFizzBuzzRoute: ProblemsFizzBuzzRoute,
+  PSlugRoute: PSlugRoute,
   VizIdRoute: VizIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminProblemsSlugRoute: AdminProblemsSlugRoute,
+  AdminProblemsNewRoute: AdminProblemsNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

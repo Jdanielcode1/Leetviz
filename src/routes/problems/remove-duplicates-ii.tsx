@@ -1,44 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+import { useMemo, useState } from 'react'
+import type { CodeLine, Example, TestCase } from '~/types/problem'
+import { ProblemLayout } from '~/components/ProblemLayout'
 
 export const Route = createFileRoute('/problems/remove-duplicates-ii')({
   component: RemoveDuplicatesVisualization,
 })
 
-interface StackItem {
-  char: string
-  count: number
-}
-
-interface Step {
-  lineNumber: number
-  description: string
-  insight: string
-  inputString: string
-  currentIndex: number
-  stack: StackItem[]
-  phase: 'init' | 'iterate' | 'check-match' | 'increment' | 'pop' | 'push' | 'build-result' | 'complete'
-  highlightStackTop: boolean
-  resultSoFar: string
-  justPopped: boolean
-  poppedChars?: string
-}
-
-interface TestCase {
-  name: string
-  description: string
-  input: string
-  k: number
-  output: string
-}
-
-const PROBLEM_DESCRIPTION = `You are given a string s and an integer k, a k duplicate removal consists of choosing k adjacent and equal letters from s and removing them, causing the left and the right side of the deleted substring to concatenate together.
-
-We repeatedly make k duplicate removals on s until we no longer can.
-
-Return the final string after all such duplicate removals have been made. It is guaranteed that the answer is unique.`
-
-const CODE_LINES = [
+const CODE_LINES: Array<CodeLine> = [
   { num: 1, code: 'class Solution:' },
   { num: 2, code: '    def removeDuplicates(self, s: str, k: int) -> str:' },
   { num: 3, code: '        stack = []' },
@@ -58,34 +27,83 @@ const CODE_LINES = [
   { num: 17, code: '        return res' },
 ]
 
-const TEST_CASES: TestCase[] = [
+const PROBLEM_DESCRIPTION = `You are given a string s and an integer k, a k duplicate removal consists of choosing k adjacent and equal letters from s and removing them, causing the left and the right side of the deleted substring to concatenate together.
+
+We repeatedly make k duplicate removals on s until we no longer can.
+
+Return the final string after all such duplicate removals have been made. It is guaranteed that the answer is unique.`
+
+const EXAMPLES: Array<Example> = [
   {
-    name: 'Example 1',
-    description: 'No duplicates to remove',
-    input: 'abcd',
-    k: 2,
-    output: 'abcd',
+    input: 's = "abcd", k = 2',
+    output: '"abcd"',
+    explanation: 'There are no adjacent duplicates to remove.',
   },
   {
-    name: 'Example 2',
-    description: 'Multiple removal rounds',
-    input: 'deeedbbcccbdaa',
-    k: 3,
-    output: 'aa',
+    input: 's = "deeedbbcccbdaa", k = 3',
+    output: '"aa"',
+    explanation: 'First delete "eee" and "ccc", then delete "bb", then remove "aa". Finally we get "aa".',
   },
   {
-    name: 'Example 3',
-    description: 'Pairs removal',
-    input: 'pbbcggttciiippooaais',
-    k: 2,
-    output: 'ps',
+    input: 's = "pbbcggttciiippooaais", k = 2',
+    output: '"ps"',
+    explanation: 'Multiple removals lead to "ps".',
   },
 ]
 
-function generateSteps(testCase: TestCase): Step[] {
-  const steps: Step[] = []
-  const { input, k } = testCase
-  const stack: StackItem[] = []
+const CONSTRAINTS = [
+  '1 <= s.length <= 10^5',
+  '2 <= k <= 10^4',
+  's only contains lowercase English letters.',
+]
+
+interface StackItem {
+  char: string
+  count: number
+}
+
+interface Step {
+  lineNumber: number
+  description: string
+  insight: string
+  inputString: string
+  currentIndex: number
+  stack: Array<StackItem>
+  phase: 'init' | 'iterate' | 'check-match' | 'increment' | 'pop' | 'push' | 'build-result' | 'complete'
+  highlightStackTop: boolean
+  resultSoFar: string
+  justPopped: boolean
+  poppedChars?: string
+}
+
+interface TestCaseData {
+  input: string
+  k: number
+  output: string
+}
+
+const TEST_CASES: Array<TestCase<TestCaseData>> = [
+  {
+    id: 1,
+    label: 'Example 1 (k=2)',
+    data: { input: 'abcd', k: 2, output: 'abcd' },
+  },
+  {
+    id: 2,
+    label: 'Example 2 (k=3)',
+    data: { input: 'deeedbbcccbdaa', k: 3, output: 'aa' },
+  },
+  {
+    id: 3,
+    label: 'Example 3 (k=2)',
+    data: { input: 'pbbcggttciiippooaais', k: 2, output: 'ps' },
+  },
+]
+
+function generateSteps(testCaseData: TestCaseData): Array<Step> {
+  const steps: Array<Step> = []
+  const { input, k } = testCaseData
+  const stack: Array<StackItem> = []
 
   // Initial state
   steps.push({
@@ -269,65 +287,23 @@ function generateSteps(testCase: TestCase): Step[] {
 }
 
 function RemoveDuplicatesVisualization() {
-  const [selectedCase, setSelectedCase] = useState(1) // Default to Example 2 (most interesting)
-  const [steps, setSteps] = useState<Step[]>([])
+  const [selectedTestCase, setSelectedTestCase] = useState(1) // Default to Example 2 (most interesting)
   const [currentStep, setCurrentStep] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [speed, setSpeed] = useState(800)
-  const [showProblem, setShowProblem] = useState(false)
 
-  useEffect(() => {
-    const newSteps = generateSteps(TEST_CASES[selectedCase])
-    setSteps(newSteps)
+  const testCase = TEST_CASES[selectedTestCase]
+  const steps = useMemo(() => generateSteps(testCase.data), [testCase.data])
+  const step = steps[currentStep]
+
+  const handleTestCaseChange = (index: number) => {
+    setSelectedTestCase(index)
     setCurrentStep(0)
-    setIsPlaying(false)
-  }, [selectedCase])
+  }
 
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    if (isPlaying && currentStep < steps.length - 1) {
-      timer = setTimeout(() => setCurrentStep(prev => prev + 1), speed)
-    } else if (currentStep >= steps.length - 1) {
-      setIsPlaying(false)
-    }
-    return () => clearTimeout(timer)
-  }, [isPlaying, currentStep, steps.length, speed])
-
-  const step = steps[currentStep] || {
-    lineNumber: 0,
-    description: '',
-    insight: '',
-    inputString: '',
-    currentIndex: -1,
-    stack: [],
-    phase: 'init',
-    highlightStackTop: false,
-    resultSoFar: '',
-    justPopped: false,
-  } as Step
-
-  const testCase = TEST_CASES[selectedCase]
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight' && currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1)
-    } else if (e.key === 'ArrowLeft' && currentStep > 0) {
-      setCurrentStep(prev => prev - 1)
-    } else if (e.key === ' ') {
-      e.preventDefault()
-      setIsPlaying(prev => !prev)
-    }
-  }, [currentStep, steps.length])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
-
-  return (
-    <div className="min-h-screen bg-[#0a1628] text-slate-100">
+  // Visualization component specific to this problem
+  const visualization = (
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
 
         :root {
           --cyan: #22d3ee;
@@ -389,384 +365,189 @@ function RemoveDuplicatesVisualization() {
         .pop-out {
           animation: popOut 0.3s ease-out;
         }
-
-        .code-highlight {
-          background: linear-gradient(90deg, rgba(34, 211, 238, 0.15) 0%, rgba(34, 211, 238, 0.05) 100%);
-          border-left: 3px solid var(--cyan);
-        }
       `}</style>
 
-      <div className="max-w-[1600px] mx-auto px-8 py-6 blueprint-grid min-h-screen">
-        {/* Navigation */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-cyan-400/70 hover:text-cyan-400 transition-colors mb-8 font-display text-sm tracking-wide group"
-        >
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          BACK TO PROBLEMS
-        </Link>
-
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <div className="text-cyan-400/60 font-mono text-sm mb-1">LEETCODE #1209</div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-white mb-2">
-                Remove All Adjacent Duplicates in String II
-              </h1>
-              <div className="flex items-center gap-3">
-                <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-xs font-mono rounded border border-orange-500/30">
-                  MEDIUM
-                </span>
-                <span className="text-slate-500 text-sm font-mono">Stack + String</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowProblem(!showProblem)}
-              className="px-4 py-2 bg-slate-800/50 hover:bg-slate-700/50 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-mono transition-all"
-            >
-              {showProblem ? 'HIDE PROBLEM' : 'SHOW PROBLEM'}
-            </button>
-          </div>
-        </header>
-
-        {/* Problem Description */}
-        {showProblem && (
-          <div className="mb-8 p-6 bg-slate-900/50 border border-cyan-500/20 rounded-xl">
-            <h2 className="font-display text-lg font-semibold text-cyan-400 mb-4">Problem Description</h2>
-            <p className="text-slate-300 leading-relaxed whitespace-pre-line font-mono text-sm mb-6">
-              {PROBLEM_DESCRIPTION}
-            </p>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <div className="text-orange-400 font-mono text-xs mb-2">INPUT</div>
-                <code className="text-slate-300 text-sm">s = "{testCase.input}", k = {testCase.k}</code>
-              </div>
-              <div className="p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <div className="text-cyan-400 font-mono text-xs mb-2">OUTPUT</div>
-                <code className="text-slate-300 text-sm">"{testCase.output}"</code>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Test Case Selector */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          {TEST_CASES.map((tc, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedCase(idx)}
-              className={`px-4 py-2 rounded-lg font-mono text-sm transition-all border ${
-                selectedCase === idx
-                  ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50 glow-cyan'
-                  : 'bg-slate-800/30 text-slate-400 border-slate-700 hover:border-slate-600'
-              }`}
-            >
-              {tc.name} (k={tc.k})
-            </button>
-          ))}
+      {/* Input String Visualization */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-slate-300 font-mono text-sm">INPUT STRING</span>
+          <span className="text-slate-500 font-mono text-xs">k = {testCase.data.k}</span>
         </div>
-
-        {/* Controls */}
-        <div className="mb-6 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 bg-slate-900/50 rounded-lg p-1 border border-slate-700">
-            <button
-              onClick={() => setCurrentStep(0)}
-              disabled={currentStep === 0}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-              title="Reset"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-              disabled={currentStep === 0}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-              title="Previous"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className={`p-3 rounded-lg transition-all ${
-                isPlaying
-                  ? 'bg-orange-500/20 text-orange-400 glow-orange'
-                  : 'bg-cyan-500/20 text-cyan-400 glow-cyan'
-              }`}
-              title={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-
-            <button
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-              disabled={currentStep >= steps.length - 1}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-              title="Next"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => setCurrentStep(steps.length - 1)}
-              disabled={currentStep >= steps.length - 1}
-              className="p-2 rounded hover:bg-slate-700/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-400 hover:text-cyan-400"
-              title="End"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-slate-500 font-mono">SPEED</span>
-            <input
-              type="range"
-              min="200"
-              max="1500"
-              step="100"
-              value={1700 - speed}
-              onChange={(e) => setSpeed(1700 - parseInt(e.target.value))}
-              className="w-24 accent-cyan-500"
-            />
-          </div>
-
-          <div className="ml-auto text-slate-500 font-mono text-sm">
-            STEP {currentStep + 1} / {steps.length}
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-8 h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 transition-all duration-300"
-            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-          />
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-          {/* Code Panel */}
-          <div className="xl:col-span-2 bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+        <div className="p-6">
+          <div className="flex flex-wrap gap-1">
+            {step.inputString.split('').map((char, idx) => (
+              <div
+                key={idx}
+                className={`
+                  w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-lg
+                  border-2 transition-all duration-300
+                  ${step.currentIndex === idx
+                    ? 'bg-orange-500/20 border-orange-500 text-orange-400 glow-orange active-char'
+                    : idx < step.currentIndex && step.currentIndex >= 0
+                      ? 'bg-slate-800/50 border-slate-600/50 text-slate-500'
+                      : 'bg-slate-800 border-slate-600 text-slate-300'
+                  }
+                `}
+              >
+                {char}
               </div>
-              <span className="text-slate-500 font-mono text-xs">remove_duplicates.py</span>
-            </div>
-            <div className="p-4 font-mono text-sm overflow-x-auto">
-              {CODE_LINES.map((line) => (
-                <div
-                  key={line.num}
-                  className={`flex py-0.5 rounded transition-all duration-200 ${
-                    step.lineNumber === line.num ? 'code-highlight' : ''
-                  }`}
-                >
-                  <span className="w-8 text-right pr-4 text-slate-600 select-none flex-shrink-0">
-                    {line.num}
-                  </span>
-                  <code className={`whitespace-pre ${step.lineNumber === line.num ? 'text-cyan-300' : 'text-slate-400'}`}>
-                    {line.code || ' '}
-                  </code>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* Visualization Panel */}
-          <div className="xl:col-span-3 space-y-6">
-            {/* Input String Visualization */}
-            <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-              <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                <span className="text-slate-300 font-mono text-sm">INPUT STRING</span>
-                <span className="text-slate-500 font-mono text-xs">k = {testCase.k}</span>
+          {/* Result display */}
+          {(step.phase === 'build-result' || step.phase === 'complete') && step.resultSoFar && (
+            <div className="mt-6 pt-4 border-t border-slate-700">
+              <div className="text-slate-600 font-mono text-xs mb-2">RESULT</div>
+              <div className="flex flex-wrap gap-1">
+                {step.resultSoFar.split('').map((char, idx) => (
+                  <div
+                    key={idx}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-lg bg-green-500/20 border-2 border-green-500/50 text-green-400"
+                  >
+                    {char}
+                  </div>
+                ))}
               </div>
-              <div className="p-6">
-                <div className="flex flex-wrap gap-1">
-                  {step.inputString.split('').map((char, idx) => (
-                    <div
-                      key={idx}
-                      className={`
-                        w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-lg
-                        border-2 transition-all duration-300
-                        ${step.currentIndex === idx
-                          ? 'bg-orange-500/20 border-orange-500 text-orange-400 glow-orange active-char'
-                          : idx < step.currentIndex && step.currentIndex >= 0
-                            ? 'bg-slate-800/50 border-slate-600/50 text-slate-500'
-                            : 'bg-slate-800 border-slate-600 text-slate-300'
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Stack */}
+      <div className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
+          <span className="text-slate-300 font-mono text-sm">STACK</span>
+          <span className="text-slate-500 font-mono text-xs">
+            {step.stack.length} item{step.stack.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="p-4 min-h-[200px] flex flex-col justify-end">
+          {step.stack.length > 0 ? (
+            <div className="space-y-2">
+              {[...step.stack].reverse().map((item, idx) => {
+                const isTop = idx === 0
+                return (
+                  <div
+                    key={`${item.char}-${step.stack.length - 1 - idx}`}
+                    className={`
+                      stack-enter px-4 py-3 rounded-lg font-mono text-center
+                      flex items-center justify-between transition-all
+                      ${isTop && step.highlightStackTop
+                        ? 'bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400 glow-cyan'
+                        : 'bg-slate-800 border border-slate-600 text-slate-300'
+                      }
+                      ${step.justPopped && isTop ? 'glow-green' : ''}
+                    `}
+                  >
+                    <span className="text-slate-600 text-xs">[{step.stack.length - 1 - idx}]</span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-xl">{item.char}</span>
+                      <span className="text-slate-500">×</span>
+                      <span className={`
+                        px-2 py-0.5 rounded text-sm
+                        ${item.count >= testCase.data.k - 1 && isTop && step.highlightStackTop
+                          ? 'bg-red-500/30 text-red-400'
+                          : 'bg-slate-700 text-slate-400'
                         }
-                      `}
-                    >
-                      {char}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Result display */}
-                {(step.phase === 'build-result' || step.phase === 'complete') && step.resultSoFar && (
-                  <div className="mt-6 pt-4 border-t border-slate-700">
-                    <div className="text-slate-600 font-mono text-xs mb-2">RESULT</div>
-                    <div className="flex flex-wrap gap-1">
-                      {step.resultSoFar.split('').map((char, idx) => (
-                        <div
-                          key={idx}
-                          className="w-10 h-10 rounded-lg flex items-center justify-center font-mono font-bold text-lg bg-green-500/20 border-2 border-green-500/50 text-green-400"
-                        >
-                          {char}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Stack & Explanation Row */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Stack */}
-              <div className="bg-slate-900/70 rounded-xl border border-slate-700 overflow-hidden">
-                <div className="px-4 py-3 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center">
-                  <span className="text-slate-300 font-mono text-sm">STACK</span>
-                  <span className="text-slate-500 font-mono text-xs">
-                    {step.stack.length} item{step.stack.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="p-4 min-h-[200px] flex flex-col justify-end">
-                  {step.stack.length > 0 ? (
-                    <div className="space-y-2">
-                      {[...step.stack].reverse().map((item, idx) => {
-                        const isTop = idx === 0
-                        return (
-                          <div
-                            key={`${item.char}-${step.stack.length - 1 - idx}`}
-                            className={`
-                              stack-enter px-4 py-3 rounded-lg font-mono text-center
-                              flex items-center justify-between transition-all
-                              ${isTop && step.highlightStackTop
-                                ? 'bg-cyan-500/20 border-2 border-cyan-500 text-cyan-400 glow-cyan'
-                                : 'bg-slate-800 border border-slate-600 text-slate-300'
-                              }
-                              ${step.justPopped && isTop ? 'glow-green' : ''}
-                            `}
-                          >
-                            <span className="text-slate-600 text-xs">[{step.stack.length - 1 - idx}]</span>
-                            <span className="flex items-center gap-2">
-                              <span className="text-xl">{item.char}</span>
-                              <span className="text-slate-500">×</span>
-                              <span className={`
-                                px-2 py-0.5 rounded text-sm
-                                ${item.count >= testCase.k - 1 && isTop && step.highlightStackTop
-                                  ? 'bg-red-500/30 text-red-400'
-                                  : 'bg-slate-700 text-slate-400'
-                                }
-                              `}>
-                                {item.count}
-                              </span>
-                            </span>
-                            <span className="text-slate-600 text-xs">{isTop ? '← TOP' : ''}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-slate-600 text-center font-mono text-sm italic">
-                      Stack is empty
-                    </div>
-                  )}
-
-                  {step.justPopped && step.poppedChars && (
-                    <div className="mt-4 text-center">
-                      <span className="inline-block px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                        Removed: "{step.poppedChars}"
+                      `}>
+                        {item.count}
                       </span>
-                    </div>
-                  )}
-                </div>
+                    </span>
+                    <span className="text-slate-600 text-xs">{isTop ? '← TOP' : ''}</span>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-slate-600 text-center font-mono text-sm italic">
+              Stack is empty
+            </div>
+          )}
+
+          {step.justPopped && step.poppedChars && (
+            <div className="mt-4 text-center">
+              <span className="inline-block px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                Removed: "{step.poppedChars}"
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Completion */}
+      {step.phase === 'complete' && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-green-400 font-display font-bold text-lg mb-1">
+                DUPLICATES REMOVED
               </div>
-
-              {/* Explanation */}
-              <div className="bg-gradient-to-br from-slate-900/70 to-slate-800/50 rounded-xl border border-cyan-500/20 overflow-hidden">
-                <div className="px-4 py-3 bg-cyan-500/5 border-b border-cyan-500/20">
-                  <span className="text-cyan-400 font-mono text-sm">CURRENT OPERATION</span>
-                </div>
-                <div className="p-4 space-y-3">
-                  <div className="text-white font-display text-lg">
-                    {step.description}
-                  </div>
-                  <div className="text-slate-400 text-sm leading-relaxed border-l-2 border-cyan-500/30 pl-3">
-                    {step.insight}
-                  </div>
-
-                  {step.phase === 'complete' && (
-                    <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
-                      <div className="text-green-400 font-display font-bold text-lg mb-1">
-                        DUPLICATES REMOVED
-                      </div>
-                      <div className="text-green-300 font-mono text-sm">
-                        Result: "{step.resultSoFar}"
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div className="text-green-300 font-mono text-sm">
+                Result: "{step.resultSoFar}"
               </div>
             </div>
           </div>
         </div>
+      )}
+    </>
+  )
 
-        {/* Algorithm Summary */}
-        <div className="mt-8 bg-slate-900/50 rounded-xl border border-slate-700 p-6">
-          <h2 className="font-display text-lg font-semibold text-cyan-400 mb-4">ALGORITHM OVERVIEW</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">APPROACH</div>
-              <p className="text-slate-400 text-sm">
-                Use a stack of [char, count] pairs. When count reaches k, pop the entry.
-                This handles cascading deletions automatically.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">TIME COMPLEXITY</div>
-              <p className="text-slate-400 text-sm">
-                <span className="text-cyan-400 font-mono">O(n)</span> - Each character is pushed
-                and popped at most once.
-              </p>
-            </div>
-            <div className="p-4 bg-slate-800/30 rounded-lg border border-slate-700">
-              <div className="text-orange-400 font-mono text-xs mb-2">SPACE COMPLEXITY</div>
-              <p className="text-slate-400 text-sm">
-                <span className="text-cyan-400 font-mono">O(n)</span> - Stack stores at most n
-                character entries.
-              </p>
-            </div>
-          </div>
+  // Algorithm insight component
+  const algorithmInsight = (
+    <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+      <h3 className="text-slate-300 font-mono text-sm mb-3">Algorithm Insight</h3>
+      <div className="grid gap-3 text-xs">
+        <div>
+          <h4 className="text-orange-400 font-mono mb-1">Stack Approach</h4>
+          <p className="text-slate-400">Use a stack of [char, count] pairs. When count reaches k, pop the entry. This handles cascading deletions automatically.</p>
         </div>
-
-        {/* Keyboard shortcuts hint */}
-        <div className="mt-6 text-center text-slate-600 font-mono text-xs">
-          KEYBOARD: ← Previous | → Next | Space Play/Pause
+        <div className="flex gap-3">
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-cyan-400 font-mono">Time: O(n)</span>
+            <p className="text-slate-500 text-xs mt-1">Each character is pushed and popped at most once</p>
+          </div>
+          <div className="flex-1 bg-slate-900/50 rounded-lg p-2">
+            <span className="text-cyan-400 font-mono">Space: O(n)</span>
+            <p className="text-slate-500 text-xs mt-1">Stack stores at most n character entries</p>
+          </div>
         </div>
       </div>
     </div>
+  )
+
+  return (
+    <ProblemLayout
+      header={{
+        number: '1209',
+        title: 'Remove All Adjacent Duplicates in String II',
+        difficulty: 'medium',
+        tags: ['Stack', 'String'],
+      }}
+      description={PROBLEM_DESCRIPTION}
+      examples={EXAMPLES}
+      constraints={CONSTRAINTS}
+      testCases={TEST_CASES}
+      selectedTestCase={selectedTestCase}
+      codeLines={CODE_LINES}
+      codeFilename="remove_duplicates.py"
+      activeLineNumber={step.lineNumber}
+      visualization={visualization}
+      currentStep={{
+        description: step.description,
+        insight: step.insight,
+      }}
+      algorithmInsight={algorithmInsight}
+      onTestCaseChange={handleTestCaseChange}
+      onPrev={() => setCurrentStep(Math.max(0, currentStep - 1))}
+      onNext={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+      onReset={() => setCurrentStep(0)}
+      currentStepIndex={currentStep}
+      totalSteps={steps.length}
+    />
   )
 }
