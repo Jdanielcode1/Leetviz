@@ -1,11 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { convexQuery } from '@convex-dev/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { convexQuery, useConvexAction } from '@convex-dev/react-query'
 import { api } from '../../../convex/_generated/api'
 import type { CodeLine, StepInfo, TestCase } from '~/types/problem'
 import { ProblemLayout } from '~/components/ProblemLayout'
 import { GenericVisualization } from '~/components/visualizations/GenericVisualization'
+import {
+  SandpackVisualization,
+  VisualizationError,
+  VisualizationLoading,
+} from '~/components/SandpackVisualization'
 
 export const Route = createFileRoute('/p/$slug')({
   component: DynamicProblemPage,
@@ -28,10 +33,30 @@ function DynamicProblemPage() {
 
   const [selectedTestCase, setSelectedTestCase] = useState(0)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [visualizationError, setVisualizationError] = useState<string | null>(null)
 
-  // Get steps for the selected test case
-  const currentTestCaseSteps = useMemo(() => {
-    if (!problem || !problem.generatedSteps) return []
+  // Fix visualization mutation
+  const fixVisualization = useMutation({
+    mutationFn: useConvexAction(api.generateVisualizationCode.fixAndSaveVisualization),
+    onSuccess: () => {
+      setVisualizationError(null)
+    },
+  })
+
+  // Check if we should use the new Sandpack visualization
+  const useSandpack = problem?.generatedVisualization?.componentCode
+
+  // Get steps based on which system is being used
+  const currentSteps = useMemo(() => {
+    if (!problem) return []
+
+    // New Sandpack system
+    if (useSandpack && problem.generatedVisualization) {
+      return problem.generatedVisualization.steps as Array<GeneratedStep>
+    }
+
+    // Legacy system - get steps for selected test case
+    if (!problem.generatedSteps) return []
 
     const testCase = problem.testCases[selectedTestCase]
     if (!testCase) return []
@@ -41,7 +66,7 @@ function DynamicProblemPage() {
     )
 
     return (stepsData?.steps || []) as Array<GeneratedStep>
-  }, [problem, selectedTestCase])
+  }, [problem, selectedTestCase, useSandpack])
 
   // Convert code to CodeLine format
   const codeLines: Array<CodeLine> = useMemo(() => {
@@ -68,10 +93,26 @@ function DynamicProblemPage() {
   const handleTestCaseChange = (index: number) => {
     setSelectedTestCase(index)
     setCurrentStepIndex(0)
+    setVisualizationError(null)
   }
 
+  // Handle visualization error
+  const handleVisualizationError = useCallback((error: string) => {
+    setVisualizationError(error)
+  }, [])
+
+  // Handle fix visualization
+  const handleFixVisualization = useCallback(() => {
+    if (!problem || !visualizationError) return
+
+    fixVisualization.mutate({
+      problemId: problem._id,
+      error: visualizationError,
+    })
+  }, [problem, visualizationError, fixVisualization])
+
   // Get current step info
-  const currentStep = currentTestCaseSteps[currentStepIndex]
+  const currentStep = currentSteps[currentStepIndex]
   const stepInfo: StepInfo = currentStep
     ? {
         description: currentStep.description,
@@ -145,8 +186,8 @@ function DynamicProblemPage() {
     )
   }
 
-  // Check if steps have been generated
-  if (currentTestCaseSteps.length === 0) {
+  // Check if steps have been generated (for either system)
+  if (currentSteps.length === 0) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -177,14 +218,38 @@ function DynamicProblemPage() {
     )
   }
 
-  // Visualization component
-  const visualization = (
-    <GenericVisualization
-      type={problem.visualizationType}
-      variables={currentStep?.variables || {}}
-      phase={currentStep?.phase}
-    />
-  )
+  // Choose visualization component based on whether we're using Sandpack
+  let visualization
+
+  if (useSandpack && problem.generatedVisualization) {
+    visualization = (
+      <div className="h-full space-y-3">
+        {visualizationError ? (
+          <VisualizationError
+            error={visualizationError}
+            onFix={handleFixVisualization}
+            isFixing={fixVisualization.isPending}
+          />
+        ) : null}
+
+        <SandpackVisualization
+          componentCode={problem.generatedVisualization.componentCode}
+          steps={problem.generatedVisualization.steps as Array<GeneratedStep>}
+          stepIndex={currentStepIndex}
+          onError={handleVisualizationError}
+          className={visualizationError ? 'opacity-50' : ''}
+        />
+      </div>
+    )
+  } else {
+    visualization = (
+      <GenericVisualization
+        type={problem.visualizationType}
+        variables={currentStep?.variables || {}}
+        phase={currentStep?.phase}
+      />
+    )
+  }
 
   // Algorithm insight component (complexity info)
   const algorithmInsight =
@@ -236,13 +301,11 @@ function DynamicProblemPage() {
       onTestCaseChange={handleTestCaseChange}
       onPrev={() => setCurrentStepIndex(Math.max(0, currentStepIndex - 1))}
       onNext={() =>
-        setCurrentStepIndex(
-          Math.min(currentTestCaseSteps.length - 1, currentStepIndex + 1)
-        )
+        setCurrentStepIndex(Math.min(currentSteps.length - 1, currentStepIndex + 1))
       }
       onReset={() => setCurrentStepIndex(0)}
       currentStepIndex={currentStepIndex}
-      totalSteps={currentTestCaseSteps.length}
+      totalSteps={currentSteps.length}
     />
   )
 }

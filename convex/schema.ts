@@ -73,8 +73,27 @@ export default defineSchema({
       })
     ),
 
-    // Visualization Type
+    // Visualization Type (legacy: array, linked-list, etc.)
     visualizationType: v.string(),
+
+    // NEW: AI-Generated Sandpack Visualization
+    generatedVisualization: v.optional(
+      v.object({
+        componentCode: v.string(), // Complete React component source
+        steps: v.array(
+          v.object({
+            lineNumber: v.number(),
+            description: v.string(),
+            insight: v.string(),
+            variables: v.any(),
+            phase: v.optional(v.string()),
+          })
+        ),
+        testCaseId: v.number(), // Which test case this visualization is for
+        lastError: v.optional(v.string()),
+        lastUpdated: v.number(),
+      })
+    ),
 
     // Complexity Info
     timeComplexity: v.optional(v.string()),

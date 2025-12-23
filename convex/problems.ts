@@ -124,6 +124,23 @@ export const getProblemBySlug = query({
         })
       ),
       visualizationType: v.string(),
+      generatedVisualization: v.optional(
+        v.object({
+          componentCode: v.string(),
+          steps: v.array(
+            v.object({
+              lineNumber: v.number(),
+              description: v.string(),
+              insight: v.string(),
+              variables: v.any(),
+              phase: v.optional(v.string()),
+            })
+          ),
+          testCaseId: v.number(),
+          lastError: v.optional(v.string()),
+          lastUpdated: v.number(),
+        })
+      ),
       timeComplexity: v.optional(v.string()),
       spaceComplexity: v.optional(v.string()),
       isPublished: v.boolean(),
@@ -240,6 +257,23 @@ export const updateProblem = mutation({
       )
     ),
     visualizationType: v.optional(v.string()),
+    generatedVisualization: v.optional(
+      v.object({
+        componentCode: v.string(),
+        steps: v.array(
+          v.object({
+            lineNumber: v.number(),
+            description: v.string(),
+            insight: v.string(),
+            variables: v.any(),
+            phase: v.optional(v.string()),
+          })
+        ),
+        testCaseId: v.number(),
+        lastError: v.optional(v.string()),
+        lastUpdated: v.number(),
+      })
+    ),
     timeComplexity: v.optional(v.string()),
     spaceComplexity: v.optional(v.string()),
   },

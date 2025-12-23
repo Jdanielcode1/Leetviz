@@ -10,6 +10,7 @@
 
 import type * as generateProblemSteps from "../generateProblemSteps.js";
 import type * as generateVisualization from "../generateVisualization.js";
+import type * as generateVisualizationCode from "../generateVisualizationCode.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as problems from "../problems.js";
 import type * as visualizations from "../visualizations.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   generateProblemSteps: typeof generateProblemSteps;
   generateVisualization: typeof generateVisualization;
+  generateVisualizationCode: typeof generateVisualizationCode;
   myFunctions: typeof myFunctions;
   problems: typeof problems;
   visualizations: typeof visualizations;

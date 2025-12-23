@@ -58,6 +58,7 @@ function EditProblemPage() {
   const [spaceComplexity, setSpaceComplexity] = useState('')
 
   const [isGeneratingSteps, setIsGeneratingSteps] = useState(false)
+  const [isGeneratingAnimation, setIsGeneratingAnimation] = useState(false)
   const [generationStatus, setGenerationStatus] = useState('')
 
   // Populate form when problem loads
@@ -92,6 +93,10 @@ function EditProblemPage() {
 
   const generateSteps = useMutation({
     mutationFn: useConvexAction(api.generateProblemSteps.generateStepsForProblemTestCase),
+  })
+
+  const generateAnimation = useMutation({
+    mutationFn: useConvexAction(api.generateVisualizationCode.generateAndSaveVisualization),
   })
 
   const togglePublished = useMutation({
@@ -150,6 +155,27 @@ function EditProblemPage() {
       setGenerationStatus('Failed to regenerate steps')
     } finally {
       setIsGeneratingSteps(false)
+    }
+  }
+
+  const handleGenerateAnimation = async () => {
+    if (!problem || testCases.length === 0) return
+
+    setIsGeneratingAnimation(true)
+    try {
+      // Generate animation for the first test case
+      setGenerationStatus('Generating AI animation...')
+      await generateAnimation.mutateAsync({
+        problemId: problem._id,
+        testCaseId: testCases[0].id,
+      })
+      setGenerationStatus('Animation generated successfully!')
+      setTimeout(() => setGenerationStatus(''), 3000)
+    } catch (error) {
+      console.error('Failed to generate animation:', error)
+      setGenerationStatus('Failed to generate animation')
+    } finally {
+      setIsGeneratingAnimation(false)
     }
   }
 
@@ -247,6 +273,14 @@ function EditProblemPage() {
                 }`}
               >
                 {problem.isPublished ? 'Published' : 'Draft'}
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateAnimation}
+                disabled={isGeneratingAnimation}
+                className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-mono text-sm"
+              >
+                {isGeneratingAnimation ? 'Generating...' : 'Generate Animation'}
               </button>
               <button
                 type="button"
@@ -483,9 +517,45 @@ function EditProblemPage() {
             </div>
           </Section>
 
-          {/* Generated Steps Info */}
+          {/* AI Animation Status */}
+          <Section title="AI Animation (Sandpack)">
+            <div className="bg-slate-800/30 rounded-lg p-4 space-y-3">
+              {problem.generatedVisualization ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                    <span className="text-emerald-400 font-mono text-sm">Animation Generated</span>
+                  </div>
+                  <p className="text-slate-400 text-sm">
+                    {problem.generatedVisualization.steps.length} steps |
+                    Test Case: {problem.testCases.find((t: TestCase) => t.id === problem.generatedVisualization?.testCaseId)?.label || 'Unknown'} |
+                    Last updated: {new Date(problem.generatedVisualization.lastUpdated).toLocaleString()}
+                  </p>
+                  {problem.generatedVisualization.lastError && (
+                    <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                      <p className="text-red-400 text-xs font-mono">
+                        Last error: {problem.generatedVisualization.lastError}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-slate-500" />
+                    <span className="text-slate-400 font-mono text-sm">No Animation Generated</span>
+                  </div>
+                  <p className="text-slate-500 text-sm">
+                    Click "Generate Animation" to create an AI-powered React visualization using Sandpack.
+                  </p>
+                </>
+              )}
+            </div>
+          </Section>
+
+          {/* Legacy Generated Steps Info */}
           {problem.generatedSteps.length > 0 && (
-            <Section title="Generated Steps">
+            <Section title="Legacy Steps (GenericVisualization)">
               <div className="bg-slate-800/30 rounded-lg p-4">
                 <p className="text-slate-400 text-sm mb-2">
                   Steps generated for {problem.generatedSteps.length} test case(s):
