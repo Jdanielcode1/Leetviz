@@ -94,6 +94,10 @@ function EditProblemPage() {
     mutationFn: useConvexAction(api.generateProblemSteps.generateStepsForProblemTestCase),
   })
 
+  const togglePublished = useMutation({
+    mutationFn: useConvexMutation(api.problems.togglePublished),
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!problem) return
@@ -223,14 +227,36 @@ function EditProblemPage() {
                 Edit: {problem.title}
               </h1>
             </div>
-            <button
-              type="button"
-              onClick={handleRegenerateSteps}
-              disabled={isGeneratingSteps}
-              className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-mono text-sm"
-            >
-              {isGeneratingSteps ? 'Regenerating...' : 'Regenerate Steps'}
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/p/$slug"
+                params={{ slug }}
+                target="_blank"
+                className="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors font-mono text-sm"
+              >
+                Preview
+              </Link>
+              <button
+                type="button"
+                onClick={() => togglePublished.mutate({ id: problem._id })}
+                disabled={togglePublished.isPending}
+                className={`px-4 py-2 rounded-lg font-mono text-sm transition-colors ${
+                  problem.isPublished
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                    : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                }`}
+              >
+                {problem.isPublished ? 'Published' : 'Draft'}
+              </button>
+              <button
+                type="button"
+                onClick={handleRegenerateSteps}
+                disabled={isGeneratingSteps}
+                className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-mono text-sm"
+              >
+                {isGeneratingSteps ? 'Regenerating...' : 'Regenerate Steps'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

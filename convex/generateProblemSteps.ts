@@ -66,7 +66,7 @@ ${args.testInput}
 Generate the visualization steps JSON:`;
 
     const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20241022",
+      model: "claude-sonnet-4-20250514",
       max_tokens: 8192,
       system: STEP_GENERATION_PROMPT,
       messages: [
